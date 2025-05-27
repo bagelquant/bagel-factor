@@ -105,6 +105,15 @@ class TestFactorSort(unittest.TestCase):
         s = str(self.factor)
         self.assertIn("Unnamed Factor", s) 
 
+    def test_factor_next_returns_ttest(self):
+        """
+        Test that the mean of factor_next_returns is significantly different from zero using a t-test.
+        """
+        t_stat, p_value = self.factor.t_test_factor_returns()
+        print(f"T-test statistic: {t_stat}, p-value: {p_value}")
+        self.assertIsInstance(t_stat, float)
+        self.assertIsInstance(p_value, float)
+
 
 class TestFactorRegression(unittest.TestCase):
     def setUp(self):
@@ -169,3 +178,12 @@ class TestFactorRegression(unittest.TestCase):
     def test_str_representation(self):
         s = str(self.factor)
         self.assertIn("Unnamed Factor", s)
+
+    def test_factor_next_returns_ttest(self):
+        """
+        Test that the mean of factor_next_returns is significantly different from zero using a t-test.
+        """
+        t_stat, p_value = self.factor.t_test_factor_returns()
+        print(f"T-test statistic: {t_stat}, p-value: {p_value}")
+        self.assertIsInstance(t_stat, float)
+        self.assertIsInstance(p_value, float)

@@ -27,6 +27,8 @@ import pandas as pd
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from statsmodels.regression.linear_model import OLS
+from scipy import stats
+
 
 
 @dataclass
@@ -52,10 +54,29 @@ class Factor(ABC):
         Compute the factor returns.
         """
         pass
+    
+    @property
+    @abstractmethod
+    def rank_correlation(self) -> pd.Series:
+        """Rank correlation coefficients of the factor value with the next returns, each timestamp."""
+        pass
 
     def __str__(self):
         return f"{self.name}: {self.description}"
-
+        
+    def t_test_factor_returns(self, 
+                              alpha: float = 0.05,
+                              h_0: float = 0.0) -> tuple[float, float]:
+        """ 
+        Perform a t-test on the factor returns.
+        :param alpha: Significance level for the t-test, default is 0.05. 
+        :param h_0: Null hypothesis value, default is 0.0.
+        :return: t-stat, p-value
+        
+        The factor returns are assumed i.i.d. each timestamp is an observation.
+        """
+        t_stat, p_value = stats.ttest_1samp(self.factor_next_returns.dropna(), h_0)
+        return t_stat, p_value  # type: ignore
 
 
 @dataclass
@@ -96,6 +117,27 @@ class FactorSort(Factor):
         self.portfolio_next_returns = portfolio_next_returns
         # Factor returns: high group minus low group
         self.factor_next_returns = portfolio_next_returns[self.group_number] - portfolio_next_returns[1]
+    
+    @property
+    def rank_correlation(self) -> pd.Series:
+        """
+        Calculate the rank correlation coefficients of:
+        - rank of the group labels (1 to group_number)
+        - rank of the next returns of the stocks
+        For each timestamp, computes Spearman correlation between group label and next return.
+        """
+        correlations = []
+        for date in self.group_labels.index:
+            group_ranks = self.group_labels.loc[date]
+            returns = self.stock_next_returns.loc[date]
+            mask = group_ranks.notna() & returns.notna()
+            if mask.sum() < 2:
+                correlations.append(float('nan'))
+            else:
+                corr = group_ranks[mask].corr(returns[mask], method='spearman')
+                correlations.append(corr)
+        return pd.Series(correlations, index=self.group_labels.index)
+
 
 
 @dataclass
@@ -104,8 +146,7 @@ class FactorRegression(Factor):
     Factor using regression to calculate the factor returns.
     
     Each timestamp's factor returns are calculated by performing a cross-sectional regression:
-
-    - factor_data is used as the independent variable (factor loadings)
+- factor_data is used as the independent variable (factor loadings)
     - stock_next_returns is used as the dependent variable (next returns)
     The factor returns are the slope coefficients of the regression for each timestamp
     """
@@ -147,3 +188,23 @@ class FactorRegression(Factor):
         self.factor_next_returns = pd.Series(factor_returns, index=self.factor_data.index)
         self.intercept_values = pd.Series(intercepts, index=self.factor_data.index)
         self.residuals = pd.DataFrame(residuals, index=self.factor_data.index)
+
+    @property
+    def rank_correlation(self) -> pd.Series:
+        """
+        Calculate the rank correlation coefficients of:
+        - rank of the factor data(factor loadings)
+        - rank of the next returns of the stocks
+        For each timestamp, computes Spearman correlation between factor value and next return.
+        """
+        correlations = []
+        for date in self.factor_data.index:
+            x = self.factor_data.loc[date]
+            y = self.stock_next_returns.loc[date]
+            mask = x.notna() & y.notna()
+            if mask.sum() < 2:
+                correlations.append(float('nan'))
+            else:
+                corr = x[mask].corr(y[mask], method='spearman')
+                correlations.append(corr)
+        return pd.Series(correlations, index=self.factor_data.index)
