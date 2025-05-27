@@ -64,8 +64,10 @@ class FactorSort(Factor):
     """
 
     group_number: int = field(default=10)
-    portfolio_next_returns: pd.DataFrame = field(init=False)  # columns are group numbers, index is timestamps
 
+    # Attributes that user could access for further analysis
+    portfolio_next_returns: pd.DataFrame = field(init=False)  # columns are group numbers, index is timestamps
+    group_labels: pd.DataFrame = field(init=False)  # labels for each stock at each timestamp
 
     def compute(self) -> None:
         """
@@ -84,6 +86,7 @@ class FactorSort(Factor):
 
         # Reshape group_labels to match the original factor_data shape
         group_labels = group_labels.unstack()  # type: ignore
+        self.group_labels = group_labels
 
         # Calculate portfolio returns for each group
         portfolio_next_returns = pd.DataFrame(index=self.factor_data.index, columns=range(1, self.group_number + 1), dtype=float)

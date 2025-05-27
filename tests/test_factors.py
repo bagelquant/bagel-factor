@@ -25,7 +25,7 @@ class TestFactorSort(unittest.TestCase):
 
         # drop the last row make sure the factor_data and stock_next_returns have the same length
         self.factor_data = self.factor_data.iloc[:-1]
-        self.factor = FactorSort(factor_data=self.factor_data, stock_next_returns=self.stock_next_returns)
+        self.factor = FactorSort(factor_data=self.factor_data, stock_next_returns=self.stock_next_returns, group_number=7)
 
 
     def test_factor_returns(self):
@@ -37,3 +37,70 @@ class TestFactorSort(unittest.TestCase):
         print("\n=== test_factor.TestFactorSort.test_portfolio_next_returns ===")
         print(f"Portfolio next returns:\n{self.factor.portfolio_next_returns}")
 
+
+    def test_group_labels(self):
+        print("\n=== test_factor.TestFactorSort.test_group_labels ===")
+        print(f"Group labels:\n{self.factor.group_labels}")
+
+        # count how many stocks in each group at each timestamp
+        group_counts = self.factor.group_labels.apply(pd.Series.value_counts, axis=1).fillna(0).astype(int)
+        print(f"Group counts at each timestamp:\n{group_counts}")
+        # Assert that the sum of group counts equals the number of columns (stocks) at each timestamp
+        for idx, row in group_counts.iterrows():
+            self.assertEqual(row.sum(), self.factor_data.shape[1])
+
+    def test_group_labels_range(self):
+        """
+        Test that group labels are within the expected range (1 to group_number).
+        """
+        min_label = self.factor.group_labels.min().min()
+        max_label = self.factor.group_labels.max().max()
+        self.assertGreaterEqual(min_label, 1)
+        self.assertLessEqual(max_label, self.factor.group_number)
+
+    def test_portfolio_next_returns_shape(self):
+        """
+        Test that portfolio_next_returns has the correct shape.
+        """
+        expected_shape = (self.factor_data.shape[0], self.factor.group_number)
+        self.assertEqual(self.factor.portfolio_next_returns.shape, expected_shape)
+
+    def test_factor_next_returns_length(self):
+        """
+        Test that factor_next_returns has the correct length (same as number of timestamps).
+        """
+        self.assertEqual(len(self.factor.factor_next_returns), self.factor_data.shape[0])
+
+    def test_portfolio_next_returns_nan(self):
+        """
+        Test that there are no NaNs in portfolio_next_returns.
+        """
+        self.assertFalse(self.factor.portfolio_next_returns.isnull().values.any())
+
+    def test_group_labels_no_nan(self):
+        """
+        Test that there are no NaNs in group_labels.
+        """
+        self.assertFalse(self.factor.group_labels.isnull().values.any())
+
+    def test_factor_next_returns_not_nan(self):
+        """
+        Test that there are no NaNs in factor_next_returns.
+        """
+        self.assertFalse(self.factor.factor_next_returns.isnull().values.any())
+
+    def test_group_labels_unique_per_row(self):
+        """
+        Test that each group label appears at least once in each timestamp (row).
+        """
+        for idx, row in self.factor.group_labels.iterrows():
+            unique_labels = set(row)
+            for group in range(1, self.factor.group_number + 1):
+                self.assertIn(group, unique_labels)
+
+    def test_str_representation(self):
+        """
+        Test the __str__ method of FactorSort.
+        """
+        s = str(self.factor)
+        self.assertIn("Unnamed Factor", s) 
