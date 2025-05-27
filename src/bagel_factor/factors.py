@@ -26,6 +26,7 @@ Calculation methods(subclasses of Factor):
 import pandas as pd
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from statsmodels.regression.linear_model import OLS
 
 
 @dataclass
@@ -61,6 +62,10 @@ class Factor(ABC):
 class FactorSort(Factor):
     """
     Factor using the sort method to calculate the factor returns.
+
+    1. Ranks the factor data each timestamp
+    2. Assigns stocks to groups based on their ranks, and calculates the portfolio returns(average) for each group.
+    3. The factor returns are the high group number minus low group number portfolio returns.
     """
 
     group_number: int = field(default=10)
@@ -70,13 +75,6 @@ class FactorSort(Factor):
     group_labels: pd.DataFrame = field(init=False)  # labels for each stock at each timestamp
 
     def compute(self) -> None:
-        """
-        Compute the factor value using the sort method.
-
-        1. Ranks the factor data each timestamp
-        2. Assigns stocks to groups based on their ranks, and calculates the portfolio returns(average) for each group.
-        3. The factor returns are the high group number minus low group number portfolio returns.
-        """
         # Rank the factor data
         ranked_data = self.factor_data.rank(axis=1, method='first', ascending=True)
 
@@ -98,3 +96,54 @@ class FactorSort(Factor):
         self.portfolio_next_returns = portfolio_next_returns
         # Factor returns: high group minus low group
         self.factor_next_returns = portfolio_next_returns[self.group_number] - portfolio_next_returns[1]
+
+
+@dataclass
+class FactorRegression(Factor):
+    """
+    Factor using regression to calculate the factor returns.
+    
+    Each timestamp's factor returns are calculated by performing a cross-sectional regression:
+
+    - factor_data is used as the independent variable (factor loadings)
+    - stock_next_returns is used as the dependent variable (next returns)
+    The factor returns are the slope coefficients of the regression for each timestamp
+    """
+    
+    intercept: bool = field(default=False, init=False)  # Whether to include an intercept in the regression
+    intercept_values: pd.Series = field(init=False)  # Intercept values if needed
+    residuals: pd.DataFrame = field(init=False)  # Residuals of the regression for each timestamp
+
+    def compute(self) -> None:
+        factor_returns = []
+        intercepts = []
+        residuals = []
+        for date in self.factor_data.index:
+            x = self.factor_data.loc[date]
+            y = self.stock_next_returns.loc[date]
+            mask = x.notna() & y.notna()
+            x_valid = x[mask]
+            y_valid = y[mask]
+            if len(x_valid) < 2:
+                factor_returns.append(float('nan'))
+                intercepts.append(float('nan'))
+                residuals.append(pd.Series([float('nan')]*len(x), index=x.index))
+                continue
+            if self.intercept:
+                x_reg = pd.DataFrame({'x': x_valid, 'const': 1})
+                model = OLS(y_valid, x_reg)
+                result = model.fit()
+                factor_returns.append(result.params['x'])
+                intercepts.append(result.params['const'])
+            else:
+                model = OLS(y_valid, x_valid)
+                result = model.fit()
+                factor_returns.append(result.params[0])
+                intercepts.append(float('nan'))
+            # Fill residuals for all stocks (NaN for those not in regression)
+            res = pd.Series(float('nan'), index=x.index)
+            res.loc[x_valid.index] = result.resid
+            residuals.append(res)
+        self.factor_next_returns = pd.Series(factor_returns, index=self.factor_data.index)
+        self.intercept_values = pd.Series(intercepts, index=self.factor_data.index)
+        self.residuals = pd.DataFrame(residuals, index=self.factor_data.index)

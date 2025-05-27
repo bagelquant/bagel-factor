@@ -4,7 +4,7 @@ Tests for the factors module.
 
 import unittest
 import pandas as pd
-from src.bagel_factor import FactorSort
+from src.bagel_factor import FactorSort, FactorRegression
 
 
 class TestFactorSort(unittest.TestCase):
@@ -87,7 +87,7 @@ class TestFactorSort(unittest.TestCase):
         """
         Test that there are no NaNs in factor_next_returns.
         """
-        self.assertFalse(self.factor.factor_next_returns.isnull().values.any())
+        self.assertFalse(pd.isnull(self.factor.factor_next_returns).any())
 
     def test_group_labels_unique_per_row(self):
         """
@@ -104,3 +104,68 @@ class TestFactorSort(unittest.TestCase):
         """
         s = str(self.factor)
         self.assertIn("Unnamed Factor", s) 
+
+
+class TestFactorRegression(unittest.TestCase):
+    def setUp(self):
+        # Test price data
+        start_date = pd.Timestamp("2009-01-01")
+        end_date = pd.Timestamp("2023-12-31")
+        stock_returns = pd.read_csv("tests/test_stock_returns.csv", index_col=0, parse_dates=True).loc[start_date:end_date]
+        stock_price = (stock_returns + 1).cumprod()  # convert returns to price
+        stock_price = stock_price.resample("6ME").last()
+        stock_returns = stock_price.pct_change().dropna()
+        self.factor_data = stock_returns
+        self.stock_next_returns = stock_returns.shift(-1).dropna()
+        self.factor_data = self.factor_data.iloc[:-1]
+        self.factor = FactorRegression(factor_data=self.factor_data, stock_next_returns=self.stock_next_returns)
+
+    def test_factor_returns(self):
+        """
+        Test that factor_next_returns is calculated correctly.
+        """
+        print("\n=== test_factor.TestFactorRegression.test_factor_returns ===")
+        print(f"Factor returns:\n{self.factor.factor_next_returns}")
+
+    def test_residuals(self):
+        """
+        Test that residuals are calculated correctly.
+        """
+        print("\n=== test_factor.TestFactorRegression.test_residuals ===")
+        print(f"Residuals:\n{self.factor.residuals}")
+
+    def test_intercept_values(self):
+        """
+        Test that intercept_values are calculated correctly.
+        """
+        print("\n=== test_factor.TestFactorRegression.test_intercept_values ===")
+        print(f"Intercept values:\n{self.factor.intercept_values}")
+
+
+    def test_factor_next_returns_length(self):
+        """
+        Test that factor_next_returns has the correct length (same as number of timestamps).
+        """
+        self.assertEqual(len(self.factor.factor_next_returns), self.factor_data.shape[0])
+
+    def test_factor_next_returns_not_nan(self):
+        """
+        Test that there are no NaNs in factor_next_returns.
+        """
+        self.assertFalse(self.factor.factor_next_returns.isnull().values.any())
+
+    def test_residuals_shape(self):
+        """
+        Test that residuals DataFrame has the correct shape.
+        """
+        self.assertEqual(self.factor.residuals.shape, self.factor_data.shape)
+
+    def test_intercept_values_length(self):
+        """
+        Test that intercept_values has the correct length (same as number of timestamps).
+        """
+        self.assertEqual(len(self.factor.intercept_values), self.factor_data.shape[0])
+
+    def test_str_representation(self):
+        s = str(self.factor)
+        self.assertIn("Unnamed Factor", s)
