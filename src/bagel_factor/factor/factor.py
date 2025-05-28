@@ -53,36 +53,6 @@ class Factor(ABC):
         """
         pass
 
-    @property
-    @abstractmethod
-    def _rank_correlation_x(self) -> pd.DataFrame:
-        """
-        DataFrame to use as the x-axis for rank correlation calculation.
-        Subclasses must implement this to specify which data to use.
-        """
-        pass
-
-    @property
-    def rank_correlation(self) -> pd.Series:
-        """
-        Calculate the rank correlation coefficients of:
-        - rank of the x-axis data (defined by subclass)
-        - rank of the next returns of the stocks
-        For each timestamp, computes Spearman correlation between x and next return.
-        """
-        correlations = []
-        x_data = self._rank_correlation_x
-        for date in x_data.index:
-            x = x_data.loc[date]
-            y = self.stock_next_returns.loc[date]
-            mask = x.notna() & y.notna()
-            if mask.sum() < 2:
-                correlations.append(float('nan'))
-            else:
-                corr = x[mask].corr(y[mask], method='spearman')
-                correlations.append(corr)
-        return pd.Series(correlations, index=x_data.index)
-
     def __str__(self):
         return f"{self.name}: {self.description}"
 
@@ -139,11 +109,6 @@ class FactorSort(Factor):
         # Factor returns: high group minus low group
         self.factor_next_returns = portfolio_next_returns[self.group_number] - portfolio_next_returns[1]
 
-    @property
-    def _rank_correlation_x(self) -> pd.DataFrame:
-        return self.group_labels
-
-
 
 @dataclass
 class FactorRegression(Factor):
@@ -193,7 +158,3 @@ class FactorRegression(Factor):
         self.factor_next_returns = pd.Series(factor_returns, index=self.factor_data.index)
         self.intercept_values = pd.Series(intercepts, index=self.factor_data.index)
         self.residuals = pd.DataFrame(residuals, index=self.factor_data.index)
-
-    @property
-    def _rank_correlation_x(self) -> pd.DataFrame:
-        return self.factor_data
