@@ -57,9 +57,33 @@ class Factor(ABC):
     
     @property
     @abstractmethod
-    def rank_correlation(self) -> pd.Series:
-        """Rank correlation coefficients of the factor value with the next returns, each timestamp."""
+    def _rank_correlation_x(self) -> pd.DataFrame:
+        """
+        DataFrame to use as the x-axis for rank correlation calculation.
+        Subclasses must implement this to specify which data to use.
+        """
         pass
+
+    @property
+    def rank_correlation(self) -> pd.Series:
+        """
+        Calculate the rank correlation coefficients of:
+        - rank of the x-axis data (defined by subclass)
+        - rank of the next returns of the stocks
+        For each timestamp, computes Spearman correlation between x and next return.
+        """
+        correlations = []
+        x_data = self._rank_correlation_x
+        for date in x_data.index:
+            x = x_data.loc[date]
+            y = self.stock_next_returns.loc[date]
+            mask = x.notna() & y.notna()
+            if mask.sum() < 2:
+                correlations.append(float('nan'))
+            else:
+                corr = x[mask].corr(y[mask], method='spearman')
+                correlations.append(corr)
+        return pd.Series(correlations, index=x_data.index)
 
     def __str__(self):
         return f"{self.name}: {self.description}"
@@ -119,24 +143,8 @@ class FactorSort(Factor):
         self.factor_next_returns = portfolio_next_returns[self.group_number] - portfolio_next_returns[1]
     
     @property
-    def rank_correlation(self) -> pd.Series:
-        """
-        Calculate the rank correlation coefficients of:
-        - rank of the group labels (1 to group_number)
-        - rank of the next returns of the stocks
-        For each timestamp, computes Spearman correlation between group label and next return.
-        """
-        correlations = []
-        for date in self.group_labels.index:
-            group_ranks = self.group_labels.loc[date]
-            returns = self.stock_next_returns.loc[date]
-            mask = group_ranks.notna() & returns.notna()
-            if mask.sum() < 2:
-                correlations.append(float('nan'))
-            else:
-                corr = group_ranks[mask].corr(returns[mask], method='spearman')
-                correlations.append(corr)
-        return pd.Series(correlations, index=self.group_labels.index)
+    def _rank_correlation_x(self) -> pd.DataFrame:
+        return self.group_labels
 
 
 
@@ -144,13 +152,13 @@ class FactorSort(Factor):
 class FactorRegression(Factor):
     """
     Factor using regression to calculate the factor returns.
-    
+
     Each timestamp's factor returns are calculated by performing a cross-sectional regression:
 - factor_data is used as the independent variable (factor loadings)
     - stock_next_returns is used as the dependent variable (next returns)
     The factor returns are the slope coefficients of the regression for each timestamp
     """
-    
+
     intercept: bool = field(default=False, init=False)  # Whether to include an intercept in the regression
     intercept_values: pd.Series = field(init=False)  # Intercept values if needed
     residuals: pd.DataFrame = field(init=False)  # Residuals of the regression for each timestamp
@@ -190,21 +198,5 @@ class FactorRegression(Factor):
         self.residuals = pd.DataFrame(residuals, index=self.factor_data.index)
 
     @property
-    def rank_correlation(self) -> pd.Series:
-        """
-        Calculate the rank correlation coefficients of:
-        - rank of the factor data(factor loadings)
-        - rank of the next returns of the stocks
-        For each timestamp, computes Spearman correlation between factor value and next return.
-        """
-        correlations = []
-        for date in self.factor_data.index:
-            x = self.factor_data.loc[date]
-            y = self.stock_next_returns.loc[date]
-            mask = x.notna() & y.notna()
-            if mask.sum() < 2:
-                correlations.append(float('nan'))
-            else:
-                corr = x[mask].corr(y[mask], method='spearman')
-                correlations.append(corr)
-        return pd.Series(correlations, index=self.factor_data.index)
+    def _rank_correlation_x(self) -> pd.DataFrame:
+        return self.factor_data
