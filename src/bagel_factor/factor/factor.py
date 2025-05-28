@@ -44,10 +44,10 @@ class Factor(ABC):
     factor_next_returns: pd.Series = field(init=False)
 
     def __post_init__(self):
-        self.compute()
+        self._compute()
 
     @abstractmethod
-    def compute(self) -> None:
+    def _compute(self) -> None:
         """
         Compute the factor returns.
         """
@@ -116,7 +116,7 @@ class FactorSort(Factor):
     portfolio_next_returns: pd.DataFrame = field(init=False)  # columns are group numbers, index is timestamps
     group_labels: pd.DataFrame = field(init=False)  # labels for each stock at each timestamp
 
-    def compute(self) -> None:
+    def _compute(self) -> None:
         # Rank the factor data
         ranked_data = self.factor_data.rank(axis=1, method='first', ascending=True)
 
@@ -160,7 +160,7 @@ class FactorRegression(Factor):
     intercept_values: pd.Series = field(init=False)  # Intercept values if needed
     residuals: pd.DataFrame = field(init=False)  # Residuals of the regression for each timestamp
 
-    def compute(self) -> None:
+    def _compute(self) -> None:
         factor_returns = []
         intercepts = []
         residuals = []

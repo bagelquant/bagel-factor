@@ -1,1 +1,1 @@
-from .factors import FactorSort, FactorRegression
+from .factor.factor import FactorSort, FactorRegression

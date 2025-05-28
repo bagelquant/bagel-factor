@@ -8,6 +8,7 @@ from src.bagel_factor import FactorSort, FactorRegression
 
 
 class TestFactorSort(unittest.TestCase):
+
     def setUp(self):
         # Test price data
         start_date = pd.Timestamp("2009-01-01")
