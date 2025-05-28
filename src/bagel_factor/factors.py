@@ -9,7 +9,7 @@ both data should be prepared before using the factor classes, it should be the f
 
 Example:
 
-    if you want to calculate a 6 month momentum factor, you should prepare: 
+    if you want to calculate a 6-month momentum factor, you should prepare:
         - factor_data(momentum values at time t)
         - stock_next_returns(returns from t to t+6 months)
     Both DataFrames should have same index (timestamps) and columns (tickers).
@@ -19,16 +19,14 @@ Base class Factor is an abstract class that defines the interface for all factor
 Calculation methods(subclasses of Factor):
 
     - FactorSort: using the sort method, high minus low portfolio returns as factor returns.
-    - RegressionFactor: using factor data as factor loadinsings in a cross-sectional regression, each timestamp factor returns are the slope coefficients of the regression.
+    - RegressionFactor: using factor data as factor loadings in a cross-sectional regression, each timestamp factor returns are the slope coefficients of the regression.
 """
-
 
 import pandas as pd
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from statsmodels.regression.linear_model import OLS
 from scipy import stats
-
 
 
 @dataclass
@@ -42,19 +40,19 @@ class Factor(ABC):
 
     name: str = field(default="Unnamed Factor")
     description: str = field(default="No description provided")
-    
+
     factor_next_returns: pd.Series = field(init=False)
 
     def __post_init__(self):
         self.compute()
-    
+
     @abstractmethod
     def compute(self) -> None:
         """
         Compute the factor returns.
         """
         pass
-    
+
     @property
     @abstractmethod
     def _rank_correlation_x(self) -> pd.DataFrame:
@@ -87,16 +85,15 @@ class Factor(ABC):
 
     def __str__(self):
         return f"{self.name}: {self.description}"
-        
-    def t_test_factor_returns(self, 
-                              alpha: float = 0.05,
+
+    def t_test_factor_returns(self,
                               h_0: float = 0.0) -> tuple[float, float]:
-        """ 
+        """
         Perform a t-test on the factor returns.
-        :param alpha: Significance level for the t-test, default is 0.05. 
+        :param alpha: Significance level for the t-test, default is 0.05.
         :param h_0: Null hypothesis value, default is 0.0.
         :return: t-stat, p-value
-        
+
         The factor returns are assumed i.i.d. each timestamp is an observation.
         """
         t_stat, p_value = stats.ttest_1samp(self.factor_next_returns.dropna(), h_0)
@@ -141,7 +138,7 @@ class FactorSort(Factor):
         self.portfolio_next_returns = portfolio_next_returns
         # Factor returns: high group minus low group
         self.factor_next_returns = portfolio_next_returns[self.group_number] - portfolio_next_returns[1]
-    
+
     @property
     def _rank_correlation_x(self) -> pd.DataFrame:
         return self.group_labels
