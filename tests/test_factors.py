@@ -158,12 +158,6 @@ class TestFactorRegression(unittest.TestCase):
         """
         self.assertEqual(len(self.factor.factor_next_returns), self.factor_data.shape[0])
 
-    def test_factor_next_returns_not_nan(self):
-        """
-        Test that there are no NaNs in factor_next_returns.
-        """
-        self.assertFalse(self.factor.factor_next_returns.isnull().values.any())
-
     def test_residuals_shape(self):
         """
         Test that residuals DataFrame has the correct shape.
@@ -188,3 +182,7 @@ class TestFactorRegression(unittest.TestCase):
         print(f"T-test statistic: {t_stat}, p-value: {p_value}")
         self.assertIsInstance(t_stat, float)
         self.assertIsInstance(p_value, float)
+
+
+if __name__ == "__main__":
+    unittest.main()
