@@ -9,7 +9,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Annotated, Optional
-from .factor import FactorSort, FactorRegression
+from .single_factor_calculation import FactorSort, FactorRegression
 
 
 def evaluate_factor(
@@ -93,7 +93,7 @@ def evaluate_factor(
         f.write(results)
 
     # Save input and output data for further analysis
-    data_dir = output_path.parent / "data"
+    data_dir = output_path / "data"
     input_dir = data_dir / "input"
     input_dir.mkdir(parents=True, exist_ok=True)
     # Save input data

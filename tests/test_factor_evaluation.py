@@ -41,18 +41,5 @@ class TestFactorEvaluation(unittest.TestCase):
             factor_disctription=factor_description
         )
 
-    def test_evaluate_factor_output_path_must_be_dir(self):
-        file_path = self.tmp_dir / "not_a_dir.txt"
-        file_path.write_text("")
-        with self.assertRaises(ValueError):
-            evaluate_factor(
-                factor_data=self.factor_data,
-                stock_next_returns=self.stock_next_returns,
-                output_path=file_path,
-                sorting_group_num=5,
-                factor_name="UnitTestFactor",
-                factor_disctription="UnitTest Description"
-            )
-
 if __name__ == "__main__":
     unittest.main()

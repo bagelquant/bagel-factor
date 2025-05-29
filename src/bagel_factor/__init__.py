@@ -1,2 +1,2 @@
-from .factor.factor import FactorSort, FactorRegression
-from .factor.factor_evaluation import evaluate_factor
+from .single_factor_evaluation.single_factor_calculation import FactorSort, FactorRegression
+from .single_factor_evaluation.factor_evaluation import evaluate_factor
