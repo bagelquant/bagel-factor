@@ -171,4 +171,3 @@ T-statistic: ... , p-value: ...
 
 - [How to identify a factor](https://bagelquant.com/factor-models/how-to-identify-a-factor/)
 - Bagel Factor documentation
-
