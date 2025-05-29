@@ -5,9 +5,10 @@ Provides a comprehensive, well-documented, and organized solution for evaluating
 """
 
 import pandas as pd
+from scipy import stats
 import matplotlib.pyplot as plt
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 from .factor import FactorSort, FactorRegression
 
 
@@ -62,7 +63,7 @@ def evaluate_factor(
     )
     reg_mean = factor_regression.factor_next_returns.mean()
     reg_std = factor_regression.factor_next_returns.std()
-    reg_ic, reg_icir = _calculate_regression_ics(factor_regression)
+    reg_ic, reg_icir, reg_ics_df = _calculate_regression_ics(factor_regression)
 
     # --- Highlight Table ---
     highlight_table = pd.DataFrame({
@@ -84,12 +85,27 @@ def evaluate_factor(
         "- ICIR > 1.0: very strong and stable factor.\n\n"
     )
     results += _evaluation_factor_sort(factor_sort, plots_path)
-    results += _evaluation_factor_regression(factor_regression, plots_path)
+    results += _evaluation_factor_regression(factor_regression, plots_path, reg_ics_df)
 
     # Save results
     results_path = output_path / f"{factor_name}_evaluation.md"
     with results_path.open("w") as f:
         f.write(results)
+
+    # Save input and output data for further analysis
+    data_dir = output_path.parent / "data"
+    input_dir = data_dir / "input"
+    input_dir.mkdir(parents=True, exist_ok=True)
+    # Save input data
+    stock_next_returns.to_csv(input_dir / "stock_next_returns.csv")
+    factor_data.to_csv(input_dir / "factor_data.csv")
+    # Save sort method outputs
+    factor_sort.portfolio_next_returns.to_csv(data_dir / "sort_group_portfolios_next_returns.csv")
+    factor_sort.factor_next_returns.to_csv(data_dir / "sort_factor_next_returns.csv")
+    _calculate_ics(factor_sort.portfolio_next_returns).to_csv(data_dir / "sort_ICs.csv")
+    # Save regression method outputs
+    factor_regression.factor_next_returns.to_csv(data_dir / "regression_factor_next_returns.csv")
+    reg_ics_df.to_csv(data_dir / "regression_ICs.csv")
 
 
 def _calculate_sort_ics(factor_sort: FactorSort) -> tuple:
@@ -105,12 +121,12 @@ def _calculate_sort_ics(factor_sort: FactorSort) -> tuple:
     return ic_mean, icir
 
 
-def _calculate_regression_ics(factor_regression: FactorRegression) -> tuple:
+def _calculate_regression_ics(factor_regression: FactorRegression):
     """
     Calculate mean IC and ICIR for FactorRegression method.
 
     :param factor_regression: FactorRegression instance.
-    :returns: Tuple of (IC mean, ICIR).
+    :returns: Tuple of (IC mean, ICIR, ICs DataFrame).
     """
     reg_ics_df = pd.DataFrame(index=factor_regression.factor_next_returns.index, columns=["pearson", "spearman"])
     for date in factor_regression.factor_next_returns.index:
@@ -125,7 +141,7 @@ def _calculate_regression_ics(factor_regression: FactorRegression) -> tuple:
             reg_ics_df.loc[date, "spearman"] = x[mask].corr(y[mask], method="spearman")
     ic_mean = reg_ics_df.mean().mean()
     icir = ic_mean / reg_ics_df.std().mean()
-    return ic_mean, icir
+    return ic_mean, icir, reg_ics_df
 
 
 def _calculate_ics(portfolio_next_returns: pd.DataFrame) -> pd.DataFrame:
@@ -300,32 +316,35 @@ def _evaluation_factor_sort(factor_sort: FactorSort, output_path: Path) -> str:
     return md
 
 
-def _evaluation_factor_regression(factor_regression: FactorRegression, output_path: Path) -> str:
+def _evaluation_factor_regression(
+    factor_regression: FactorRegression,
+    output_path: Path,
+    reg_ics_df: Optional[pd.DataFrame] = None
+) -> str:
     """
     Evaluate FactorRegression and return markdown summary.
 
     :param factor_regression: FactorRegression instance.
     :param output_path: Path to save plots.
+    :param reg_ics_df: (Optional) DataFrame of regression ICs to avoid recomputation.
     :returns: Markdown summary string for FactorRegression evaluation.
     """
-    import pandas as pd
     from scipy import stats
     factor_next_returns = factor_regression.factor_next_returns
-    factor_data = factor_regression.factor_data
-    stock_next_returns = factor_regression.stock_next_returns
-    # ICs
-    ICs = pd.DataFrame(index=factor_next_returns.index, columns=["pearson", "spearman"])
-    for date in factor_next_returns.index:
-        x = factor_data.loc[date]
-        y = stock_next_returns.loc[date]
-        mask = x.notna() & y.notna()
-        if mask.sum() < 2:
-            ICs.loc[date, "pearson"] = float('nan')
-            ICs.loc[date, "spearman"] = float('nan')
-        else:
-            ICs.loc[date, "pearson"] = x[mask].corr(y[mask], method="pearson")
-            ICs.loc[date, "spearman"] = x[mask].corr(y[mask], method="spearman")
-    # ICIR
+    # Use provided ICs if available, else compute
+    if reg_ics_df is None:
+        reg_ics_df = pd.DataFrame(index=factor_next_returns.index, columns=["pearson", "spearman"])
+        for date in factor_next_returns.index:
+            x = factor_regression.factor_data.loc[date]
+            y = factor_regression.stock_next_returns.loc[date]
+            mask = x.notna() & y.notna()
+            if mask.sum() < 2:
+                reg_ics_df.loc[date, "pearson"] = float('nan')
+                reg_ics_df.loc[date, "spearman"] = float('nan')
+            else:
+                reg_ics_df.loc[date, "pearson"] = x[mask].corr(y[mask], method="pearson")
+                reg_ics_df.loc[date, "spearman"] = x[mask].corr(y[mask], method="spearman")
+    ICs = reg_ics_df
     icir = pd.DataFrame({
         "ICs mean": ICs.mean(),
         "std": ICs.std(),

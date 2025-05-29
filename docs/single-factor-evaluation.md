@@ -35,6 +35,17 @@ Single factor evaluation is a critical step in quantitative research. It helps d
    - Detailed sections for sorting and regression methods
    - All plots saved in a `plots/` subfolder and referenced in the report
 
+5. **Data Export for Further Analysis**
+   - All relevant input and output data are automatically saved as CSV files for further analysis:
+     - `data/input/stock_next_returns.csv`: The input next-period returns DataFrame.
+     - `data/input/factor_data.csv`: The input factor values DataFrame.
+     - `data/sort_group_portfolios_next_returns.csv`: Grouped portfolio returns from the sorting method.
+     - `data/sort_factor_next_returns.csv`: High-minus-low (H-L) returns from the sorting method.
+     - `data/sort_ICs.csv`: Information Coefficient (IC) time series for the sorting method.
+     - `data/regression_factor_next_returns.csv`: Regression factor returns (cross-sectional regression coefficients).
+     - `data/regression_ICs.csv`: Information Coefficient (IC) time series for the regression method.
+   - These files are created in the `data/` and `data/input/` subfolders of your project, making it easy to conduct further custom analysis or validation outside the main evaluation workflow.
+
 ## Report Structure
 
 ### 1. Highlight Table
@@ -69,6 +80,20 @@ A summary table of key metrics for both methods:
   - ICs over time
   - Histogram of Pearson and Spearman ICs
   - Histogram of regression coefficient series
+
+### 4. Data Export for Further Analysis
+
+All relevant input and output data are automatically saved as CSV files for further analysis:
+
+- `data/input/stock_next_returns.csv`: The input next-period returns DataFrame.
+- `data/input/factor_data.csv`: The input factor values DataFrame.
+- `data/sort_group_portfolios_next_returns.csv`: Grouped portfolio returns from the sorting method.
+- `data/sort_factor_next_returns.csv`: High-minus-low (H-L) returns from the sorting method.
+- `data/sort_ICs.csv`: Information Coefficient (IC) time series for the sorting method.
+- `data/regression_factor_next_returns.csv`: Regression factor returns (cross-sectional regression coefficients).
+- `data/regression_ICs.csv`: Information Coefficient (IC) time series for the regression method.
+
+These files are created in the `data/` and `data/input/` subfolders of your project, making it easy to conduct further custom analysis or validation outside the main evaluation workflow.
 
 ## Example Output (Excerpt)
 
