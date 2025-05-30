@@ -2,7 +2,11 @@
 Factor evaluation module for Bagel Factor.
 
 Author: Yanzhong(Eric) Huang
-Provides a comprehensive, well-documented, and organized solution for evaluating single factors using both sorting and regression methods. Generates a Markdown report with key highlights, detailed evaluation, and saves all plots in a dedicated subfolder.
+
+Provides a comprehensive, well-documented,
+and organized solution for evaluating single factors using both sorting and regression methods.
+Generates a Markdown report with key highlights, detailed evaluation,
+and saves all plots in a dedicated subfolder.
 """
 
 import pandas as pd

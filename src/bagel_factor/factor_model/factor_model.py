@@ -31,14 +31,14 @@ class FactorModel:
     """
 
     factor_loadings: dict[str, pd.DataFrame]
-    factor_returns: pd.DataFrame
+    stock_next_returns: pd.DataFrame
     rf: float = 0.0
     regression_params: pd.DataFrame = field(init=False)
     t_test_table: pd.DataFrame = field(init=False)
     
     def __post_init__(self):
         # regression_params will have the same index as factor_returns and columns as const + factor_loadings keys 
-        self.regression_params = pd.DataFrame(index=self.factor_returns.index, columns=['const'] + list(self.factor_loadings.keys()))
+        self.regression_params = pd.DataFrame(index=self.stock_next_returns.index, columns=['const'] + list(self.factor_loadings.keys()))
         # t_test_table index will be const + factor_loadings keys and columns: factor_return, std, t-stat, p-value
         self.t_test_table = pd.DataFrame(index=['const'] + list(self.factor_loadings.keys()), columns=['factor_return', 'std', 't-stat', 'p-value'])
 
@@ -50,7 +50,7 @@ class FactorModel:
         Evaluate the factor model using cross-sectional regression for each date in factor_returns.
         The results are stored in regression_params DataFrame.
         """
-        for date in self.factor_returns.index:
+        for date in self.stock_next_returns.index:
             result = self._cross_sectional_regression(date)
             self.regression_params.loc[date, 'const'] = result.params['const']
             for factor in self.factor_loadings.keys():
@@ -84,7 +84,7 @@ class FactorModel:
         # Prepare data for regression
         factor_loadings_date: dict[str, pd.Series] = {factor: loadings.loc[date, :] for factor, loadings in self.factor_loadings.items()}  # type: ignore
         X = pd.DataFrame(factor_loadings_date)
-        y = self.factor_returns.loc[date]
+        y = self.stock_next_returns.loc[date]
         X = sm.add_constant(X)
         # Run OLS regression
         model = sm.OLS(y, X, missing='drop')

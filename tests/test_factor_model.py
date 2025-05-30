@@ -29,7 +29,7 @@ class TestFactorEvaluation(unittest.TestCase):
 
         self.factor_model = FactorModel(
             factor_loadings=self.factor_loadings,
-            factor_returns=self.stock_next_returns,
+            stock_next_returns=self.stock_next_returns,
             rf=0.02
         )
     
