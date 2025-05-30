@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "bagel-factor"
+version = "0.0.1"
+authors = [
+  { name="Yanzhong Huang", email="eric.yanzhong.huang@gmail.com" },
+]
+description = "Bagel Factor is a Python package for factor analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=2.2.0",
+    "pandas>=2.2.0",
+    "matplotlib>=3.10.0",
+    "statsmodels>=0.14.0",
+    "scikit-learn>=1.6.0",
+    "scipy>=1.15.0",
+    "jupyter>=1.1.0",
+    "tabulate>=0.9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/bagelquant/bagel-factor"
+Issues = "https://github.com/bagelquant/bagel-factor/issues"
+

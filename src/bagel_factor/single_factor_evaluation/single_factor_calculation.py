@@ -1,6 +1,8 @@
 """
 Factors
 
+Author: Yanzhong(Eric) Huang
+
 input data:
 - factor_data: DataFrame with factor values for each stock at each timestamp.
 - stock_next_returns: DataFrame with the next period returns for each stock at each timestamp.

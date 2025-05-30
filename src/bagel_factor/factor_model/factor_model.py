@@ -1,6 +1,7 @@
 """
 Factor Model
 
+Author: Yanzhong(Eric) Huang
 Using cross-section (Fama-MacBeth) approach to evaluate factor models.
 """
 
