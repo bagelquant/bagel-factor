@@ -30,7 +30,7 @@ Description: UnitTest Description
 
 ![Mean Returns by Group](plots/group_means.png)
 
-### ICs and ICIR
+### ic_s and ICIR
 
 |       |    pearson |   spearman |
 |:------|-----------:|-----------:|
@@ -50,7 +50,7 @@ ICIR Table:
 | pearson  |  0.0871048 | 0.490829 | 0.177465 |
 | spearman |  0.0689655 | 0.483369 | 0.142677 |
 
-![ICs over Time](plots/ics.png)
+![ic_s over Time](plots/ics.png)
 
 ### Accumulated Returns
 
@@ -70,7 +70,7 @@ ICIR Table:
 
 ## FactorRegression Evaluation
 
-### ICs and ICIR for Regression Method
+### ic_s and ICIR for Regression Method
 
 |        |    pearson |   spearman |
 |:-------|-----------:|-----------:|
@@ -81,20 +81,20 @@ ICIR Table:
 
 ICIR Table:
 
-|          |   ICs mean |      std |     ICIR |
-|:---------|-----------:|---------:|---------:|
-| pearson  |  0.0682452 | 0.265724 | 0.256827 |
-| spearman |  0.0326877 | 0.191769 | 0.170453 |
+|          |   ic_s mean |      std |     ICIR |
+|:---------|------------:|---------:|---------:|
+| pearson  |   0.0682452 | 0.265724 | 0.256827 |
+| spearman |   0.0326877 | 0.191769 | 0.170453 |
 
-![ICs over Time](plots/ics_regression.png)
+![ic_s over Time](plots/ics_regression.png)
 
-### ICs Histogram (Pearson)
+### ic_s Histogram (Pearson)
 
-![Pearson ICs Distribution](plots/ics_pearson_hist_regression.png)
+![Pearson ic_s Distribution](plots/ics_pearson_hist_regression.png)
 
-### ICs Histogram (Spearman)
+### ic_s Histogram (Spearman)
 
-![Spearman ICs Distribution](plots/ics_spearman_hist_regression.png)
+![Spearman ic_s Distribution](plots/ics_spearman_hist_regression.png)
 
 ### t-test for factor_next_returns
 

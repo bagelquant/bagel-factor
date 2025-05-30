@@ -20,7 +20,7 @@ class TestFactorSort(unittest.TestCase):
         stock_price = stock_price.resample("6ME").last()
         stock_returns = stock_price.pct_change().dropna()
 
-        # setup factor data(momentum (returns from t-6 monthe to t))
+        # setup factor data(momentum (returns from t-6 month to t))
         self.factor_data = stock_returns
         self.stock_next_returns = stock_returns.shift(-1).dropna()
 

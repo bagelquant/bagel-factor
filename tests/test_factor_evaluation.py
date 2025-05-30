@@ -38,7 +38,7 @@ class TestFactorEvaluation(unittest.TestCase):
             output_path=self.tmp_dir,
             sorting_group_num=5,
             factor_name=factor_name,
-            factor_disctription=factor_description
+            factor_description=factor_description
         )
 
 if __name__ == "__main__":

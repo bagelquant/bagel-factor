@@ -18,7 +18,7 @@ def evaluate_factor(
     output_path: Annotated[Path, "Should be a directory to save evaluation results"],
     sorting_group_num: int = 10,
     factor_name: str = "Unnamed Factor",
-    factor_disctription: str = "No description provided"
+    factor_description: str = "No description provided"
 ) -> None:
     """
     Evaluate a single factor using both sorting and regression methods.
@@ -28,7 +28,7 @@ def evaluate_factor(
     :param output_path: Directory to save the evaluation results and plots.
     :param sorting_group_num: Number of groups for sorting method (default is 10).
     :param factor_name: Name of the factor (default is "Unnamed Factor").
-    :param factor_disctription: Description of the factor (default is "No description provided").
+    :param factor_description: Description of the factor (default is "No description provided").
     :returns: None
     """
     # Ensure output directory exists
@@ -47,7 +47,7 @@ def evaluate_factor(
         factor_data=factor_data,
         stock_next_returns=stock_next_returns,
         name=factor_name,
-        description=factor_disctription,
+        description=factor_description,
         group_number=sorting_group_num
     )
     sort_mean = factor_sort.factor_next_returns.mean()
@@ -59,7 +59,7 @@ def evaluate_factor(
         factor_data=factor_data,
         stock_next_returns=stock_next_returns,
         name=factor_name,
-        description=factor_disctription
+        description=factor_description
     )
     reg_mean = factor_regression.factor_next_returns.mean()
     reg_std = factor_regression.factor_next_returns.std()
@@ -76,7 +76,7 @@ def evaluate_factor(
 
     # --- Markdown Report ---
     results = f"# {factor_name} Evaluation Results\n"
-    results += f"\nDescription: {factor_disctription}\n\n"
+    results += f"\nDescription: {factor_description}\n\n"
     results += "## Highlight\n\n" + highlight_table.to_markdown(index=False, floatfmt=".4g") + "\n\n"
     results += (
         "**Interpretation:**  \n\n"
@@ -115,9 +115,9 @@ def _calculate_sort_ics(factor_sort: FactorSort) -> tuple:
     :param factor_sort: FactorSort instance.
     :returns: Tuple of (IC mean, ICIR).
     """
-    ICs = _calculate_ics(factor_sort.portfolio_next_returns)
-    ic_mean = ICs.mean().mean()
-    icir = ic_mean / ICs.std().mean()
+    ic_s = _calculate_ics(factor_sort.portfolio_next_returns)
+    ic_mean = ic_s.mean().mean()
+    icir = ic_mean / ic_s.std().mean()
     return ic_mean, icir
 
 
@@ -128,8 +128,22 @@ def _calculate_regression_ics(factor_regression: FactorRegression):
     :param factor_regression: FactorRegression instance.
     :returns: Tuple of (IC mean, ICIR, ICs DataFrame).
     """
-    reg_ics_df = pd.DataFrame(index=factor_regression.factor_next_returns.index, columns=["pearson", "spearman"])
-    for date in factor_regression.factor_next_returns.index:
+    reg_ics_df = _compute_regression_ics_df(factor_regression)
+    ic_mean = reg_ics_df.mean().mean()
+    icir = ic_mean / reg_ics_df.std().mean()
+    return ic_mean, icir, reg_ics_df
+
+
+def _compute_regression_ics_df(factor_regression: FactorRegression) -> pd.DataFrame:
+    """
+    Compute the regression ICs DataFrame (pearson, spearman) for each date.
+
+    :param factor_regression: FactorRegression instance.
+    :returns: DataFrame with pearson and spearman ICs for each date.
+    """
+    factor_next_returns = factor_regression.factor_next_returns
+    reg_ics_df = pd.DataFrame(index=factor_next_returns.index, columns=["pearson", "spearman"])
+    for date in factor_next_returns.index:
         x = factor_regression.factor_data.loc[date]
         y = factor_regression.stock_next_returns.loc[date]
         mask = x.notna() & y.notna()
@@ -139,9 +153,7 @@ def _calculate_regression_ics(factor_regression: FactorRegression):
         else:
             reg_ics_df.loc[date, "pearson"] = x[mask].corr(y[mask], method="pearson")
             reg_ics_df.loc[date, "spearman"] = x[mask].corr(y[mask], method="spearman")
-    ic_mean = reg_ics_df.mean().mean()
-    icir = ic_mean / reg_ics_df.std().mean()
-    return ic_mean, icir, reg_ics_df
+    return reg_ics_df
 
 
 def _calculate_ics(portfolio_next_returns: pd.DataFrame) -> pd.DataFrame:
@@ -159,16 +171,16 @@ def _calculate_ics(portfolio_next_returns: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({"pearson": pearson_ic, "spearman": spearman_ic})
 
 
-def _icir_table(ICs: pd.DataFrame) -> pd.DataFrame:
+def _icir_table(ic_s: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate ICIR (mean/std) for each IC type.
 
-    :param ICs: DataFrame of ICs (pearson, spearman).
+    :param ic_s: DataFrame of ICs (pearson, spearman).
     :returns: DataFrame with mean, std, and ICIR for each IC type.
     """
     ic_icir_table = pd.DataFrame(columns=["ICs mean", "std", "ICIR"])
-    ic_icir_table["ICs mean"] = ICs.mean()
-    ic_icir_table["std"] = ICs.std()
+    ic_icir_table["ICs mean"] = ic_s.mean()
+    ic_icir_table["std"] = ic_s.std()
     ic_icir_table["ICIR"] = ic_icir_table["ICs mean"] / ic_icir_table["std"]
     return ic_icir_table
 
@@ -193,7 +205,6 @@ def _group_statistics_table(portfolio_next_returns: pd.DataFrame, factor_next_re
     :param factor_next_returns: Series of high-low factor returns.
     :returns: DataFrame with n_t, mean, std, t-stat, p-value for each group and H-L.
     """
-    from scipy import stats
     group_result_table = pd.DataFrame(columns=["n_t", "mean", "std", "t_stat", "p_value"], index=portfolio_next_returns.columns)
     for group in portfolio_next_returns.columns:
         group_result_table.loc[group, "n_t"] = portfolio_next_returns[group].count()
@@ -221,7 +232,6 @@ def _plot_group_means(group_result_table: pd.DataFrame, output_path: Path, filen
     :param filename: Filename for the plot image.
     :returns: None
     """
-    import matplotlib.pyplot as plt
     ax = group_result_table.loc[group_result_table.index != "H-L", "mean"].plot(
         kind="bar", title="Mean Returns by Group", ylabel="Mean Return", xlabel="Group", figsize=(10, 6))
     fig = ax.figure
@@ -229,17 +239,16 @@ def _plot_group_means(group_result_table: pd.DataFrame, output_path: Path, filen
     plt.close(fig)  # type: ignore
 
 
-def _plot_ics(ICs: pd.DataFrame, output_path: Path, filename: str = "ics.png"):
+def _plot_ics(ic_s: pd.DataFrame, output_path: Path, filename: str = "ics.png"):
     """
     Plot ICs over time and save to file.
 
-    :param ICs: DataFrame of ICs (pearson, spearman).
+    :param ic_s: DataFrame of ICs (pearson, spearman).
     :param output_path: Path to save the plot.
     :param filename: Filename for the plot image.
     :returns: None
     """
-    import matplotlib.pyplot as plt
-    ax = ICs.plot(title="ICs over Time", ylabel="IC", xlabel="Date", figsize=(10, 6))
+    ax = ic_s.plot(title="ICs over Time", ylabel="IC", xlabel="Date", figsize=(10, 6))
     fig = ax.figure
     fig.savefig(output_path / filename)  # type: ignore
     plt.close(fig)  # type: ignore
@@ -254,7 +263,6 @@ def _plot_accumulated_returns(accumulated_returns: pd.DataFrame, output_path: Pa
     :param filename: Filename for the plot image.
     :returns: None
     """
-    import matplotlib.pyplot as plt
     ax = accumulated_returns.plot(title="Cumulative Returns", ylabel="Cumulative Return", xlabel="Date", figsize=(10, 6), grid=True)
     fig = ax.figure
     fig.savefig(output_path / filename)  # type: ignore
@@ -271,7 +279,6 @@ def _plot_histogram(series: pd.Series, output_path: Path, filename: str = "hist.
     :param title: Title for the plot.
     :returns: None
     """
-    import matplotlib.pyplot as plt
     ax = series.plot(kind="hist", title=title, xlabel="Next Returns", ylabel="Frequency", figsize=(10, 6), grid=True)
     fig = ax.figure
     fig.savefig(output_path / filename)  # type: ignore
@@ -288,27 +295,26 @@ def _evaluation_factor_sort(factor_sort: FactorSort, output_path: Path) -> str:
     """
     factor_next_returns = factor_sort.factor_next_returns
     portfolio_next_returns = factor_sort.portfolio_next_returns
-    group_labels = factor_sort.group_labels
     # Table of each group + factor returns
     group_table = _group_statistics_table(portfolio_next_returns, factor_next_returns)
-    # ICs and ICIR
-    ICs = _calculate_ics(portfolio_next_returns)
-    icir = _icir_table(ICs)
+    # ic_s and ICIR
+    ic_s = _calculate_ics(portfolio_next_returns)
+    ic_ir = _icir_table(ic_s)
     # Accumulated returns
     acc_returns = _accumulated_returns(portfolio_next_returns.iloc[:, 0], portfolio_next_returns.iloc[:, -1], factor_next_returns)
     acc_returns.columns = ["Low", "High", "H-L"]
     # Plots
-    _plot_group_means(group_table, output_path, "group_means.png")
-    _plot_ics(ICs, output_path, "ics.png")
-    _plot_accumulated_returns(acc_returns, output_path, "accumulated_returns.png")
+    _plot_group_means(group_table, output_path)
+    _plot_ics(ic_s, output_path)
+    _plot_accumulated_returns(acc_returns, output_path)
     _plot_histogram(factor_next_returns, output_path, "factor_next_returns_hist.png")
     # Markdown summary
     md = "## FactorSort Evaluation\n\n"
     md += "### Group Statistics\n\n" + group_table.to_markdown() + "\n\n"
     md += "![Mean Returns by Group](plots/group_means.png)\n\n"
-    md += "### ICs and ICIR\n\n" + ICs.describe().to_markdown() + "\n\n"
-    md += "ICIR Table:\n\n" + icir.to_markdown() + "\n\n"
-    md += "![ICs over Time](plots/ics.png)\n\n"
+    md += "### ic_s and ICIR\n\n" + ic_s.describe().to_markdown() + "\n\n"
+    md += "ICIR Table:\n\n" + ic_ir.to_markdown() + "\n\n"
+    md += "![ic_s over Time](plots/ics.png)\n\n"
     md += "### Accumulated Returns\n\n" + acc_returns.tail().to_markdown() + "\n\n"
     md += "![Cumulative Returns](plots/accumulated_returns.png)\n\n"
     md += "### Histogram of Factor Returns\n\n"
@@ -326,46 +332,35 @@ def _evaluation_factor_regression(
 
     :param factor_regression: FactorRegression instance.
     :param output_path: Path to save plots.
-    :param reg_ics_df: (Optional) DataFrame of regression ICs to avoid recomputation.
+    :param reg_ics_df: (Optional) DataFrame of regression ic_s to avoid recomputation.
     :returns: Markdown summary string for FactorRegression evaluation.
     """
-    from scipy import stats
     factor_next_returns = factor_regression.factor_next_returns
-    # Use provided ICs if available, else compute
+    # Use provided ic_s if available, else compute
     if reg_ics_df is None:
-        reg_ics_df = pd.DataFrame(index=factor_next_returns.index, columns=["pearson", "spearman"])
-        for date in factor_next_returns.index:
-            x = factor_regression.factor_data.loc[date]
-            y = factor_regression.stock_next_returns.loc[date]
-            mask = x.notna() & y.notna()
-            if mask.sum() < 2:
-                reg_ics_df.loc[date, "pearson"] = float('nan')
-                reg_ics_df.loc[date, "spearman"] = float('nan')
-            else:
-                reg_ics_df.loc[date, "pearson"] = x[mask].corr(y[mask], method="pearson")
-                reg_ics_df.loc[date, "spearman"] = x[mask].corr(y[mask], method="spearman")
-    ICs = reg_ics_df
+        reg_ics_df = _compute_regression_ics_df(factor_regression)
+    ic_s = reg_ics_df
     icir = pd.DataFrame({
-        "ICs mean": ICs.mean(),
-        "std": ICs.std(),
-        "ICIR": ICs.mean() / ICs.std()
+        "ic_s mean": ic_s.mean(),
+        "std": ic_s.std(),
+        "ICIR": ic_s.mean() / ic_s.std()
     })
     # t-test for factor_next_returns
     t_stat, p_value = stats.ttest_1samp(factor_next_returns.dropna(), 0)
     # Plots (regression-specific names)
-    _plot_ics(ICs, output_path, "ics_regression.png")
-    _plot_histogram(ICs["pearson"].dropna(), output_path, "ics_pearson_hist_regression.png", title="Pearson ICs Distribution (Regression)")
-    _plot_histogram(ICs["spearman"].dropna(), output_path, "ics_spearman_hist_regression.png", title="Spearman ICs Distribution (Regression)")
+    _plot_ics(ic_s, output_path, "ics_regression.png")
+    _plot_histogram(ic_s["pearson"].dropna(), output_path, "ics_pearson_hist_regression.png", title="Pearson ic_s Distribution (Regression)")
+    _plot_histogram(ic_s["spearman"].dropna(), output_path, "ics_spearman_hist_regression.png", title="Spearman ic_s Distribution (Regression)")
     _plot_histogram(factor_next_returns, output_path, "factor_next_returns_hist_regression.png", title="Factor Next Returns Distribution (Regression)")
     # Markdown summary
     md = "## FactorRegression Evaluation\n\n"
-    md += "### ICs and ICIR for Regression Method\n\n" + ICs.describe().to_markdown() + "\n\n"
+    md += "### ic_s and ICIR for Regression Method\n\n" + ic_s.describe().to_markdown() + "\n\n"
     md += "ICIR Table:\n\n" + icir.to_markdown() + "\n\n"
-    md += "![ICs over Time](plots/ics_regression.png)\n\n"
-    md += "### ICs Histogram (Pearson)\n\n"
-    md += "![Pearson ICs Distribution](plots/ics_pearson_hist_regression.png)\n\n"
-    md += "### ICs Histogram (Spearman)\n\n"
-    md += "![Spearman ICs Distribution](plots/ics_spearman_hist_regression.png)\n\n"
+    md += "![ic_s over Time](plots/ics_regression.png)\n\n"
+    md += "### ic_s Histogram (Pearson)\n\n"
+    md += "![Pearson ic_s Distribution](plots/ics_pearson_hist_regression.png)\n\n"
+    md += "### ic_s Histogram (Spearman)\n\n"
+    md += "![Spearman ic_s Distribution](plots/ics_spearman_hist_regression.png)\n\n"
     md += f"### t-test for factor_next_returns\n\nT-statistic: {t_stat:.4f}, p-value: {p_value:.4g}\n\n"
     md += "### Histogram of Factor Returns (Regression)\n\n"
     md += "![Factor Next Returns Distribution (Regression)](plots/factor_next_returns_hist_regression.png)\n"

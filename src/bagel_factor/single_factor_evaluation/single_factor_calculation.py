@@ -60,7 +60,6 @@ class Factor(ABC):
                               h_0: float = 0.0) -> tuple[float, float]:
         """
         Perform a t-test on the factor returns.
-        :param alpha: Significance level for the t-test, default is 0.05.
         :param h_0: Null hypothesis value, default is 0.0.
         :return: t-stat, p-value
 
@@ -88,7 +87,7 @@ class FactorSort(Factor):
 
     def _compute(self) -> None:
         # Rank the factor data
-        ranked_data = self.factor_data.rank(axis=1, method='first', ascending=True)
+        ranked_data = self.factor_data.rank(axis=1, method='first')
 
         # Assign stocks to groups based on their ranks
         # add 1 to group_labels to make it start from 1 instead of 0

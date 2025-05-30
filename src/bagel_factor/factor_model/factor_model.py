@@ -7,7 +7,6 @@ Using cross-section (Fama-MacBeth) approach to evaluate factor models.
 import pandas as pd
 import statsmodels.api as sm
 from dataclasses import dataclass, field
-from statsmodels.regression.linear_model import RegressionResultsWrapper
 from scipy import stats
 
 
@@ -74,7 +73,7 @@ class FactorModel:
 
 
     def _cross_sectional_regression(self,
-                                    date: pd.Timestamp) -> RegressionResultsWrapper:
+                                    date: pd.Timestamp):
         """
         Perform cross-sectional regression for a given date.
 
