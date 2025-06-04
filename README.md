@@ -1,8 +1,8 @@
-# bagel-factor
+# Bagel Factor
 
 ## Overview
 
-Bagel Factor is a modular Python library for quantitative equity research, supporting the full workflow from data collection to multi-factor model evaluation and backtesting. It provides standardized, reproducible tools for single-factor and multi-factor analysis, including Fama-MacBeth regression, IC/ICIR evaluation, and comprehensive reporting.
+Bagel Factor is a modular Python library for quantitative equity research. It supports the full workflow from data collection to multi-factor model evaluation and backtesting. The library provides standardized, reproducible tools for both single-factor and multi-factor analysis, including Fama-MacBeth regression, IC/ICIR evaluation, and comprehensive reporting.
 
 ## Workflow
 
@@ -13,19 +13,30 @@ Bagel Factor is a modular Python library for quantitative equity research, suppo
 
 ## Key Features
 
-- **Single Factor Evaluation**: Sort and regression methods, IC/ICIR, group stats, cumulative returns, and automated Markdown reporting.
-- **Multi-Factor Model**: Fama-MacBeth cross-sectional regression, t-tests, and interpretable output tables.
-- **Data Export**: All input and output data saved as CSV for further analysis.
-- **Plotting**: All key plots (IC, group means, histograms, cumulative returns) saved for reporting.
+- **Single Factor Evaluation**: Analyze factors using sort and regression methods. Includes IC/ICIR, group statistics, cumulative returns, and automated Markdown reporting.
+- **Multi-Factor Model**: Evaluate multiple factors with Fama-MacBeth cross-sectional regression, t-tests, and clear summary tables.
+- **Data Export**: All input and output data are saved as CSV files for further analysis and reproducibility.
+- **Plotting**: Automatically generates and saves all key plots (IC, group means, histograms, cumulative returns) for reporting.
 
 ## Example Usage
 
+Prepare two input DataFrames, both indexed by date with tickers as columns:
+
+- `factor_data`: Contains factor values (e.g., momentum, value, size).
+- `stock_next_returns`: Contains next period stock returns.
+
+> **Important:**
+> Ensure all data is pre-processed, cleaned, and aligned by date and ticker. For example, if using yearly rebalancing, the dates in `factor_data` and `stock_next_returns` must match and be yearly aligned.
+
 ```python
-from bagel_factor.single_factor_evaluation.factor_evaluation import evaluate_factor
+from bagel_factor import evaluate_factor
+from pathlib import Path
+
+# Evaluate a single factor and generate a report
 
 evaluate_factor(
-    factor_data,  # DataFrame: date x ticker
-    stock_next_returns,  # DataFrame: date x ticker
+    factor_data,            # DataFrame: date x ticker
+    stock_next_returns,     # DataFrame: date x ticker
     output_path=Path('output/'),
     sorting_group_num=10,
     factor_name='Momentum',
@@ -36,11 +47,16 @@ evaluate_factor(
 For multi-factor model evaluation:
 
 ```python
-from bagel_factor.factor_model.factor_model import FactorModel
+from bagel_factor import evaluate_model
+from pathlib import Path
 
-model = FactorModel(factor_loadings, factor_returns)
-print(model.regression_params)
-print(model.t_test_table)
+# Evaluate a multi-factor model and generate a report
+
+evaluate_model(
+    factor_loadings,        # Dictionary of DataFrames: date x ticker
+    stock_next_returns,     # DataFrame: date x ticker
+    output_path=Path('output/')
+)
 ```
 
 ## Documentation
@@ -56,4 +72,3 @@ print(model.t_test_table)
 ## License
 
 MIT License
-
