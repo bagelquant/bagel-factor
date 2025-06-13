@@ -10,7 +10,6 @@ from src.bagel_factor import evaluate_factor
 
 
 class TestFactorEvaluation(unittest.TestCase):
-
     def setUp(self):
         # Prepare test data similar to test_factors.py
         start_date = pd.Timestamp("2009-01-01")
@@ -29,17 +28,49 @@ class TestFactorEvaluation(unittest.TestCase):
             shutil.rmtree(self.tmp_dir)
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
 
-    def test_evaluate_factor_creates_md_file(self):
+    def tearDown(self):
+        # Clean up the temporary output directory after each test
+        if self.tmp_dir.exists():
+            shutil.rmtree(self.tmp_dir)
+
+    def test_evaluate_factor_creates_all_outputs(self):
         factor_name = "UnitTestFactor"
         factor_description = "UnitTest Description"
-        evaluate_factor(
-            factor_data=self.factor_data,
-            stock_next_returns=self.stock_next_returns,
-            output_path=self.tmp_dir,
-            sorting_group_num=5,
-            factor_name=factor_name,
-            factor_description=factor_description
-        )
+        regression_methods = ["OLS", "WLS", "RLM"]
+        intercept_options = [True, False]
+        for method in regression_methods:
+            for intercept in intercept_options:
+                out_dir = self.tmp_dir / f"{method}_{intercept}"
+                evaluate_factor(
+                    factor_data=self.factor_data,
+                    stock_next_returns=self.stock_next_returns,
+                    output_path=out_dir,
+                    sorting_group_num=5,
+                    regression_method=method,  # type: ignore
+                    regression_intercept=intercept,
+                    factor_name=factor_name,
+                    factor_description=factor_description
+                )
+                # Check markdown report
+                md_file = out_dir / f"{factor_name}_evaluation.md"
+                self.assertTrue(md_file.exists(), f"Markdown report missing for {method}, intercept={intercept}")
+                # Check plots
+                plots_dir = out_dir / "plots"
+                for plot in [
+                    "group_means.png", "ics.png", "accumulated_returns.png", "factor_next_returns_hist.png",
+                    "ics_regression.png", "ics_pearson_hist_regression.png", "ics_spearman_hist_regression.png", "factor_next_returns_hist_regression.png"
+                ]:
+                    self.assertTrue((plots_dir / plot).exists(), f"Plot {plot} missing for {method}, intercept={intercept}")
+                # Check data outputs
+                data_dir = out_dir / "data"
+                input_dir = data_dir / "input"
+                for csv in [
+                    "sort_group_portfolios_next_returns.csv", "sort_factor_next_returns.csv", "sort_ICs.csv",
+                    "regression_factor_next_returns.csv", "regression_ICs.csv"
+                ]:
+                    self.assertTrue((data_dir / csv).exists(), f"Data output {csv} missing for {method}, intercept={intercept}")
+                for csv in ["stock_next_returns.csv", "factor_data.csv"]:
+                    self.assertTrue((input_dir / csv).exists(), f"Input data {csv} missing for {method}, intercept={intercept}")
 
 if __name__ == "__main__":
     unittest.main()
