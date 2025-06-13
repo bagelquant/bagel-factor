@@ -25,9 +25,13 @@ Calculation methods(subclasses of Factor):
 """
 
 import pandas as pd
-from dataclasses import dataclass, field
+
 from abc import ABC, abstractmethod
-from statsmodels.regression.linear_model import OLS
+from dataclasses import dataclass, field
+from typing import Literal, Optional
+
+from statsmodels.regression.linear_model import OLS, WLS
+from statsmodels.robust.robust_linear_model import RLM
 from scipy import stats
 
 
@@ -120,11 +124,25 @@ class FactorRegression(Factor):
 - factor_data is used as the independent variable (factor loadings)
     - stock_next_returns is used as the dependent variable (next returns)
     The factor returns are the slope coefficients of the regression for each timestamp
-    """
 
-    intercept: bool = field(default=False, init=False)  # Whether to include an intercept in the regression
+    Attributes:
+    - regression_method: Method to use for regression, default is OLS (Ordinary Least Squares).
+        - OLS: Ordinary Least Squares regression.
+        - WLS: Weighted Least Squares regression.
+        - RLM: Robust Linear Model regression.
+    - intercept: Whether to include an intercept in the regression, default is False.
+    - intercept_values: Intercept values if needed, only used when intercept is True.
+    - residuals: Residuals of the regression for each timestamp, DataFrame with timestamps as index and stocks as columns.
+    - regression_fits: Store regression results for each timestamp, list of regression results.
+    """
+    
+    regression_method: Literal["OLS", "WLS", "RLM"] = field(default="OLS")  # Now user can set method
+
+    intercept: bool = field(default=False)  # Now user can set intercept
+    weights: Optional[pd.DataFrame] = field(default=None)  # Optional weights for WLS
     intercept_values: pd.Series = field(init=False)  # Intercept values if needed
     residuals: pd.DataFrame = field(init=False)  # Residuals of the regression for each timestamp
+    regression_fits: list = field(default_factory=list, init=False)  # Store regression results for each timestamp
 
     def _compute(self) -> None:
         factor_returns = []
@@ -141,18 +159,35 @@ class FactorRegression(Factor):
                 intercepts.append(float('nan'))
                 residuals.append(pd.Series([float('nan')]*len(x), index=x.index))
                 continue
+            # Prepare regression X
             if self.intercept:
                 x_reg = pd.DataFrame({'x': x_valid, 'const': 1})
+            else:
+                x_reg = x_valid
+            # Choose regression method
+            if self.regression_method == "OLS":
                 model = OLS(y_valid, x_reg)
                 result = model.fit()
+            elif self.regression_method == "WLS":
+                if self.weights is not None and date in self.weights.index:
+                    w = self.weights.loc[date][mask]
+                    model = WLS(y_valid, x_reg, weights=w)
+                else:
+                    model = WLS(y_valid, x_reg)
+                result = model.fit()
+            elif self.regression_method == "RLM":
+                model = RLM(y_valid, x_reg)
+                result = model.fit()
+            else:
+                raise ValueError(f"Unknown regression_method: {self.regression_method}")
+            # Extract factor return and intercept
+            if self.intercept:
                 factor_returns.append(result.params['x'])
                 intercepts.append(result.params['const'])
             else:
-                model = OLS(y_valid, x_valid)
-                result = model.fit()
                 factor_returns.append(result.params[0])
                 intercepts.append(float('nan'))
-            # Fill residuals for all stocks (NaN for those not in regression)
+            self.regression_fits.append(result)
             res = pd.Series(float('nan'), index=x.index)
             res.loc[x_valid.index] = result.resid
             residuals.append(res)
