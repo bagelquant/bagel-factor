@@ -200,5 +200,5 @@ T-statistic: ... , p-value: ...
 
 ## References
 
-- [How to identify a factor](https://bagelquant.com/factor-models/how-to-identify-a-factor/)
+- [Single Factor Test](https://bagelquant.com/factor-models/single-factor-test/)
 - Bagel Factor documentation
