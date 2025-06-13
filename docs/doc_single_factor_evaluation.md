@@ -13,15 +13,17 @@ Single factor evaluation is a critical step in quantitative research. It helps d
 1. **Input Data**
    - `factor_data`: DataFrame with dates as index and tickers as columns, containing the factor values.
    - `stock_next_returns`: DataFrame with dates as index and tickers as columns, containing the next period returns.
-   - Two input DataFrames are required:
-     - Time index
-     - Ticker columns
-     - Times stamp should be at rebalance date
-     - Have same structure (dates and tickers) for both DataFrames
+   - Both DataFrames must:
+     - Use the same time index (rebalance dates) and ticker columns
+     - Be aligned in shape and order
 
 2. **Evaluation Methods**
    - **Sorting Method**: Stocks are sorted into groups (e.g., deciles) by factor value. Group returns and high-minus-low (H-L) returns are analyzed.
-   - **Regression Method**: Cross-sectional regression of next returns on factor values for each date. The regression coefficient series is analyzed.
+   - **Regression Method**: Cross-sectional regression of next returns on factor values for each date. The regression coefficient series is analyzed. Multiple regression methods are supported:
+     - `OLS`: Ordinary Least Squares
+     - `WLS`: Weighted Least Squares (optional weights)
+     - `RLM`: Robust Linear Model
+   - The regression can be run with or without an intercept.
 
 3. **Metrics and Plots**
    - Mean and standard deviation of factor returns
@@ -80,6 +82,10 @@ A summary table of key metrics for both methods:
   - ICs over time
   - Histogram of Pearson and Spearman ICs
   - Histogram of regression coefficient series
+- **Regression Options:**
+  - Regression method can be set to `OLS`, `WLS`, or `RLM`.
+  - Intercept can be included or excluded.
+  - Optional weights can be provided for `WLS`.
 
 ### 4. Data Export for Further Analysis
 
