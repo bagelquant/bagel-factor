@@ -1,5 +1,5 @@
 """
-<MODULE NAME>
+Tests for the factor model evaluation module.
 
 Author: Yanzhong(Eric) Huang
 """
@@ -7,10 +7,11 @@ Author: Yanzhong(Eric) Huang
 import pandas as pd
 from pathlib import Path
 from unittest import TestCase
+import shutil
 from src.bagel_factor import evaluate_model
 
 
-class Test(TestCase):
+class TestModelEvaluation(TestCase):
     def setUp(self):
         # Prepare test data similar to test_factors.py
         start_date = pd.Timestamp("2009-01-01")
@@ -34,8 +35,17 @@ class Test(TestCase):
 
         # create a directory for evaluation results
         self.output_path = Path("tests/tem_eval_model_output")
+        if self.output_path.exists():
+            shutil.rmtree(self.output_path)
         self.output_path.mkdir(parents=True, exist_ok=True)
 
+    def tearDown(self):
+        # Clean up the output directory after each test
+        if self.output_path.exists():
+            shutil.rmtree(self.output_path)
 
-    def test_evaluate_model(self):
+    def test_evaluate_model_creates_report(self):
         evaluate_model(self.factor_loadings, self.stock_next_returns, self.output_path)
+        # Check that the markdown report is created
+        md_file = self.output_path / "model_evaluation_results.md"
+        self.assertTrue(md_file.exists(), "Model evaluation markdown report was not created.")
