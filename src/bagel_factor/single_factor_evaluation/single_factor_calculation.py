@@ -113,6 +113,8 @@ class FactorSort(Factor):
         self.portfolio_next_returns = portfolio_next_returns
         # Factor returns: high group minus low group
         self.factor_next_returns = portfolio_next_returns[self.group_number] - portfolio_next_returns[1]
+        # change the name of factor_next_returns to factor_returns for consistency
+        self.factor_next_returns.name = f"{self.name} Next Period Returns"
 
 
 @dataclass
@@ -192,5 +194,7 @@ class FactorRegression(Factor):
             res.loc[x_valid.index] = result.resid
             residuals.append(res)
         self.factor_next_returns = pd.Series(factor_returns, index=self.factor_data.index)
+        # Set the name for factor_next_returns
+        self.factor_next_returns.name = f"{self.name} Next Period Returns"
         self.intercept_values = pd.Series(intercepts, index=self.factor_data.index)
         self.residuals = pd.DataFrame(residuals, index=self.factor_data.index)

@@ -41,11 +41,11 @@ def evaluate_model(factor_loadings: dict[str, pd.DataFrame],
     t_test_table = model.t_test_table
 
     # Save the results to a Markdown file
-    result = f"## Factor Model Evaluation Results\n\n"
-    result += "### T-Test Results\n\n"
+    result = f"# Factor Model Evaluation Results\n\n"
+    result += "## T-Test Results\n\n"
     result += t_test_table.to_markdown() + "\n\n"
-    result += "### Regression Parameters\n\n"
-    result += regression_params.to_markdown() + "\n\n"
+    result += "## Regression Parameters\n\n"
+    result += regression_params.to_markdown() + "\n"
 
     # Write the results to a Markdown file
     output_file = output_path / "model_evaluation_results.md"
