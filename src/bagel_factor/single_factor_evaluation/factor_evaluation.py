@@ -183,6 +183,12 @@ def _plot_group_means(group_result_table: pd.DataFrame, output_path: Path, filen
 
 def _plot_ics(ic_s: pd.DataFrame, output_path: Path, filename: str = "ics.png"):
     ax = ic_s.plot(title="ICs over Time", ylabel="IC", xlabel="Date", figsize=(10, 6))
+    # Add mean lines for Pearson and Spearman ICs
+    ax.axhline(ic_s["pearson"].mean(), color='blue', linestyle='--', label='Pearson IC Mean')
+    ax.axhline(ic_s["spearman"].mean(), color='orange', linestyle='--', label='Spearman IC Mean')
+    ax.legend()
+    # Add grid for better readability
+    ax.grid(True)
     fig = ax.figure
     fig.savefig(output_path / filename)  # type: ignore
     plt.close(fig)  # type: ignore
