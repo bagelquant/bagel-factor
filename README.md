@@ -7,18 +7,18 @@ Bagel Factor is a modular Python library for quantitative equity research. It su
 ## Workflow (Modules)
 
 - Data
-    - standard data format
+  - standard data format
 - Preprocessing
-    - standardize
-    - outlier
-    - missing
+  - standardize
+  - outlier
+  - missing
 - Data validation
 - Evaluation
-    - IC: time-series of IC
-    - Grouping evaluation
-        - time-series of portfolio returns(groups)
-    - Regression
-        - time-series of factor return(regression slop)
+  - IC: time-series of IC
+  - Grouping evaluation
+    - time-series of portfolio returns(groups)
+  - Regression
+    - time-series of factor return(regression slop)
 - Report
-    - summary table: IC, IC standard deviation, ICIR, factor_return, t-test factor_return
-    - plots
+  - summary table: IC, IC standard deviation, ICIR, factor_return, t-test factor_return
+  - plots
