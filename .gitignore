@@ -177,3 +177,6 @@ cython_debug/
 
 # VS Code settings
 .vscode/
+
+# Database config
+tests/db_config.json

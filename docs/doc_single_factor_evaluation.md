@@ -193,7 +193,7 @@ ICIR Table:
 
 T-statistic: ... , p-value: ...
 
-### Histogram of Factor Returns (Regression)
+## Histogram of Factor Returns (Regression)
 
 ![Factor Next Returns Distribution (Regression)](plots/factor_next_returns_hist_regression.png)
 ```
