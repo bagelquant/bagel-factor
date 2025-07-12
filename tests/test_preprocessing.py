@@ -5,7 +5,79 @@ from datetime import datetime
 
 from src.bagel_factor import get_engine, read_mysql
 from src.bagel_factor import standardize, z_score, min_max, robust
+from src.bagel_factor import impute_missing, fill_mean, fill_median, fill_zero
+from src.bagel_factor import handle_outliers, clip_zscore, clip_iqr
 
+
+class TestMissingDataImputation(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.data = pd.DataFrame({
+            'date': ['2021-01-01', '2021-01-01', '2021-01-02', '2021-01-02'],
+            'ticker': ['A', 'B', 'A', 'B'],
+            'price': [10, None, 15, None],
+            'volume': [100, 200, None, 400]
+        })
+
+    def test_fill_mean(self):
+        print("====== Testing Fill Mean Imputation ======")
+        result = impute_missing(self.data, data_fields='price', method=fill_mean, cross_section=True, suffix='mean')
+        self.assertIn('price_mean', result.columns)
+        self.assertFalse(result['price_mean'].isna().any())
+        # Check mean imputation for the missing value
+        print(result)
+
+
+    def test_fill_median(self):
+        print("====== Testing Fill Median Imputation ======")
+        result = impute_missing(self.data, data_fields='volume', method=fill_median, cross_section=True, suffix='median')
+        self.assertIn('volume_median', result.columns)
+        self.assertFalse(result['volume_median'].isna().any())
+        print(result)
+
+    def test_fill_zero(self):
+        print("====== Testing Fill Zero Imputation ======")
+        result = impute_missing(self.data, data_fields=['price', 'volume'], method=fill_zero, cross_section=True, suffix='zero')
+        self.assertIn('price_zero', result.columns)
+        self.assertIn('volume_zero', result.columns)
+        self.assertTrue((result['price_zero'] == 0).iloc[1])
+        self.assertTrue((result['volume_zero'] == 0).iloc[2])
+        print(result)
+
+class TestOutlierHandling(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.data = pd.DataFrame({
+            'date': ['2021-01-01', '2021-01-01', '2021-01-02', '2021-01-02'],
+            'ticker': ['A', 'B', 'A', 'B'],
+            'price': [10, 1000, 15, 2000],
+            'volume': [100, 200, 3000, 400]
+        })
+
+    def test_clip_zscore(self):
+        print("====== Testing Clip Z-Score Outlier Handling ======")
+        result = handle_outliers(self.data, data_fields='price', method=clip_zscore, cross_section=True, suffix='z', threshold=1.0)
+        self.assertIn('price_z', result.columns)
+        # Check that outliers are clipped
+        max_val = result[result['date'] == '2021-01-01']['price_z'].max()
+        min_val = result[result['date'] == '2021-01-01']['price_z'].min()
+        self.assertLessEqual(max_val, result[result['date'] == '2021-01-01']['price_z'].mean() + 1.0 * result[result['date'] == '2021-01-01']['price_z'].std())
+        self.assertGreaterEqual(min_val, result[result['date'] == '2021-01-01']['price_z'].mean() - 1.0 * result[result['date'] == '2021-01-01']['price_z'].std())
+        print(result)
+
+    def test_clip_iqr(self):
+        print("====== Testing Clip IQR Outlier Handling ======")
+        result = handle_outliers(self.data, data_fields='volume', method=clip_iqr, cross_section=True, suffix='iqr', threshold=0.5)
+        self.assertIn('volume_iqr', result.columns)
+        # Check that outliers are clipped
+        q1 = self.data[self.data['date'] == '2021-01-02']['volume'].quantile(0.25)
+        q3 = self.data[self.data['date'] == '2021-01-02']['volume'].quantile(0.75)
+        iqr = q3 - q1
+        lower = q1 - 0.5 * iqr
+        upper = q3 + 0.5 * iqr
+        clipped = result[(result['date'] == '2021-01-02')]['volume_iqr']
+        self.assertTrue((clipped >= lower).all() and (clipped <= upper).all())
+        print(result)
 
 class TestStandardizationMethods(unittest.TestCase):
 

@@ -5,7 +5,7 @@ Standardization methods for financial data.
 """
 
 import pandas as pd
-from typing import Callable, Union
+from typing import Callable
 
 # Define type for standardization methods
 StandardizeMethod = Callable[[pd.DataFrame | pd.Series], pd.DataFrame | pd.Series]
