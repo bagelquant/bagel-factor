@@ -9,4 +9,4 @@ Bagel Factor is a modular Python library for quantitative equity research. It su
 - [Data](docs/modules/data/data_module.md): Handles data ingestion from various sources, including CSV files and databases.
 - [Preprocessing](docs/modules/preprocessing/preprocessing_module.md): Provides data standardization, outlier handling, and missing data imputation.
 - [Evaluation](docs/modules/evaluation/evaluation_module.md): Implements various evaluation metrics and techniques for model assessment.
-- [Reporting](docs/modules/reporting/reporting_module.md): Generates detailed reports and visualizations for model performance.
+- [Result](docs/modules/reporting/result.md): Results includes all evaluation results, including factor returns, IC, and ICIR, factor returns, and more.
