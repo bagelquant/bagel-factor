@@ -84,9 +84,25 @@ def main() -> None:
     ic_s = pd.concat(ic_s_list, axis=1)
     ic_s.columns = [f'{n}d' for n in range(1, 21)]
 
-    print(ic_s)
-    print(f'IC mean: {ic_s.mean()}')
-    print(f'ICIR: {ic_s.mean()/ic_s.std()}')
+    factor_return_grouping = calculate_factor_return_grouping(
+        data=data,
+        target='log_size',
+        prediction='next_20d_return',
+        rebalance_date_index=data.index.get_level_values('date').unique(),  # type: ignore
+    )
+    print(f'IC Mean:\n{ic_s.mean()}')
+    print(f'Factor return grouping:\n{factor_return_grouping}, mean:\n{factor_return_grouping.mean()}')
+    factor_return_grouping["HML"].plot(title="HML Return", ylabel="Return", xlabel="Rebalance Date")
+
+    factor_return_regression = calculate_factor_return_regression(
+        data=data,
+        target='log_size',
+        prediction='next_20d_return',
+        rebalance_date_index=data.index.get_level_values('date').unique(),  # type: ignore
+    )
+    print(f'Factor return regression:\n{factor_return_regression}, mean:\n{factor_return_regression.mean()}')
+    factor_return_regression.plot(title="Factor Return Regression", ylabel="Return", xlabel="Rebalance Date")
+    plt.show()
 
 
 if __name__ == '__main__':
