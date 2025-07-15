@@ -1,1 +1,2 @@
 from .ic import calculate_ic_s
+from .factor_return import calculate_factor_return_grouping, calculate_factor_return_regression
