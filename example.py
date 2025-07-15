@@ -69,7 +69,6 @@ def calculate_required_field(data: pd.DataFrame) -> pd.DataFrame:
 def main() -> None:
     data = get_raw_data()
     data = calculate_required_field(data)
-    print(data)
     
     ic_s_list = []
     for n in range(1, 21):
