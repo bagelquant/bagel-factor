@@ -15,10 +15,11 @@ from datetime import datetime
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sqlalchemy import text
 
 from src.bagel_factor import read_mysql, get_engine
-from src.bagel_factor import calculate_ic_s
+from src.bagel_factor import calculate_ic_s, calculate_factor_return_grouping, calculate_factor_return_regression
 
 
 def get_raw_data() -> pd.DataFrame:
