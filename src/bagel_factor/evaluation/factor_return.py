@@ -66,7 +66,7 @@ def calculate_factor_return_regression(
     method: Literal['OLS', 'WLS', 'RLM'] = 'OLS',
     intercept: bool = False,
     **kwargs
-) -> pd.DataFrame:
+) -> pd.Series:
     """
     Calculate factor returns using regression.
 
@@ -124,5 +124,5 @@ def calculate_factor_return_regression(
         coef = results.params[target] if not intercept else results.params.get(target, float('nan'))
         factor_returns.append(coef)
 
-    factor_returns_df = pd.DataFrame({'factor_return': factor_returns}, index=rebalance_date_index)
+    factor_returns_df = pd.Series(factor_returns, index=rebalance_date_index, name='factor_return')
     return factor_returns_df.dropna()

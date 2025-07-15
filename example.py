@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from sqlalchemy import text
 
 from src.bagel_factor import read_mysql, get_engine
-from src.bagel_factor import calculate_ic_s, calculate_factor_return_grouping, calculate_factor_return_regression
+from src.bagel_factor import Result
 
 
 def get_raw_data() -> pd.DataFrame:
@@ -47,8 +47,7 @@ def get_raw_data() -> pd.DataFrame:
         table_name='balancesheet',
         data_fields='total_share',
         date_col='f_ann_date',
-        start=datetime(2019, 6, 1),
-        end=datetime(2020, 6, 30)
+        start=datetime(2019, 6, 1), end=datetime(2020, 6, 30)
     )
 
     data = pd.concat([price, total_share]).sort_index()
@@ -70,40 +69,36 @@ def main() -> None:
     data = get_raw_data()
     data = calculate_required_field(data)
     
-    ic_s_list = []
-    for n in range(1, 21):
-        ic_s_list.append(
-            calculate_ic_s(
-                data=data,
-                target='log_size',
-                prediction=f'next_{n}d_return',
-                rebalance_date_index=data.index.get_level_values('date').unique(),  # type: ignore
-            )
-        )
-
-    ic_s = pd.concat(ic_s_list, axis=1)
-    ic_s.columns = [f'{n}d' for n in range(1, 21)]
-
-    factor_return_grouping = calculate_factor_return_grouping(
+    result = Result(
         data=data,
         target='log_size',
         prediction='next_20d_return',
-        rebalance_date_index=data.index.get_level_values('date').unique(),  # type: ignore
+        rebalance_date_index=data.index.get_level_values('date').unique(),  # type: ignore[arg-type]
+        description='Test result',
+        group_num=10
     )
-    print(f'IC Mean:\n{ic_s.mean()}')
-    print(f'Factor return grouping:\n{factor_return_grouping}, mean:\n{factor_return_grouping.mean()}')
-    factor_return_grouping["HML"].plot(title="HML Return", ylabel="Return", xlabel="Rebalance Date")
 
-    factor_return_regression = calculate_factor_return_regression(
-        data=data,
-        target='log_size',
-        prediction='next_20d_return',
-        rebalance_date_index=data.index.get_level_values('date').unique(),  # type: ignore
-    )
-    print(f'Factor return regression:\n{factor_return_regression}, mean:\n{factor_return_regression.mean()}')
-    factor_return_regression.plot(title="Factor Return Regression", ylabel="Return", xlabel="Rebalance Date")
+    print(result.summary(
+        included_fields=[
+            'description',
+            'pearson_ic', 
+            'pearson_icir', 
+            'spearman_ic',
+            'spearman_icir',
+            'factor_return_grouping_hml', 
+            'factor_return_grouping_t_stat', 
+            'factor_return_grouping_p_value',
+            'factor_return_ols',
+            'factor_return_ols_t_stat',
+            'factor_return_ols_p_value',
+            'factor_return_rlm',
+            'factor_return_rlm_t_stat',
+            'factor_return_rlm_p_value',
+        ]
+    ))
+
+    result.pearson_ic.plot(title='Pearson IC')
     plt.show()
-
 
 if __name__ == '__main__':
     start = perf_counter()
