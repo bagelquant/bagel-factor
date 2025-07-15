@@ -148,23 +148,16 @@ class Result:
     
     @property
     def factor_return_grouping_t_test(self) -> tuple[np.float64, np.float64]:
-        """
-        Perform a t-test on the HML (High Minus Low) factor returns from grouping.
-
-        Returns
-        -------
-        tuple[np.float64, np.float64]
-            The t-statistic and p-value of the t-test.
-
-        Raises
-        ------
-        ValueError
-            If 'HML' column is missing in factor_return_grouping.
-        """
-        if 'HML' not in self.factor_return_grouping:
-            raise ValueError("'HML' column is missing in factor_return_grouping.")
-        return stats.ttest_1samp(self.factor_return_grouping['HML'], 0)
+        return stats.ttest_1samp(self.factor_return_grouping_hml, 0)
     
+    @property
+    def factor_return_grouping_t_stat(self) -> float:
+        return self.factor_return_grouping_t_test[0]
+
+    @property
+    def factor_return_grouping_p_value(self) -> float:
+        return self.factor_return_grouping_t_test[1]
+
     @property
     def factor_return_ols(self) -> pd.Series:
         return calculate_factor_return_regression(
