@@ -38,13 +38,13 @@ import pandas as pd
 from bagel_factor.preprocessing.standardize import standardize, min_max
 
 data = pd.DataFrame({
-    'date': ['2021-01-01', '2021-01-01', '2021-01-02'],
-    'ticker': ['A', 'B', 'A'],
-    'price': [10, 20, 15]
+  'date': ['2021-01-01', '2021-01-01', '2021-01-02'],
+  'ticker': ['A', 'B', 'A'],
+  'price': [10, 20, 15]
 })
 
 # Standardize 'price' across tickers for each date using min-max scaling
-result = standardize(data, data_fields='price', method=min_max, cross_section=True, suffix='minmax')
+result = standardize(data, data_fields='price', method=min_max, suffix='minmax')
 print(result)
 ```
 
