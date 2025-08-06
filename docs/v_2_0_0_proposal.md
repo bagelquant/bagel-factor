@@ -26,16 +26,11 @@ This package aims to provide a universal, high-performance toolkit for evaluatin
     - Drawdown and Risk Metrics
     - Custom metric registration
 
-3. **Backtesting Engine**
-    - Fast, vectorized portfolio simulation (long/short, long-only, market-neutral, etc.)
-    - Transaction cost modeling
-    - Flexible rebalancing and holding period logic
-
-4. **Visualization**
+3. **Visualization**
     - Built-in plotting for IC time series, quantile returns, turnover, etc.
     - Export to common formats (CSV, Excel, images)
 
-5. **Parallelization (Optional)**
+4. **Parallelization (Optional)**
     - Optional support for multi-core computation (via `numba`, `joblib`, or similar)
 
 ## Interface Design
@@ -50,11 +45,10 @@ User interactions with the package will be through at least two main classes:
 1. Define the structure of the project
 2. Define data structures and input validation logic
 3. Implement core metric calculations (IC, quantile returns, etc.)
-4. Develop backtesting module
-5. Add visualization utilities
-6. Write documentation and usage examples
-7. Optimize for performance and add optional parallelization
-8. Package for PyPI and provide installation instructions
+4. Add visualization utilities
+5. Write documentation and usage examples
+6. Optimize for performance and add optional parallelization
+7. Package for PyPI and provide installation instructions
 
 ### Dependencies
 

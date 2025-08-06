@@ -15,7 +15,6 @@ Bagel Factor is a universal, high-performance Python library for evaluating quan
 
 - **Factor Data Handling**: Standardized input format for factor values, returns, and metadata. Multi-indexed DataFrame support. Data validation and cleaning utilities.
 - **Performance Metrics**: Information Coefficient (IC/Rank IC), quantile/group return analysis, turnover, Sharpe/Sortino ratios, drawdown, and custom metric registration.
-- **Backtesting Engine**: Fast, vectorized portfolio simulation (long/short, long-only, market-neutral, etc.), transaction cost modeling, flexible rebalancing and holding period logic.
 - **Visualization**: Built-in plotting for IC time series, quantile returns, turnover, and more. Export to CSV, Excel, and image formats.
 - **Parallelization (Optional)**: Multi-core computation support via `numba`, `joblib`, or similar.
 
