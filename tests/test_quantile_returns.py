@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
 import numpy as np
-from src.bagel_factor.metrics import quantile_returns
+from src.bagel_factor import quantile_returns, quantile_spread
 
 class TestQuantileReturns(unittest.TestCase):
     def setUp(self):
@@ -21,7 +21,7 @@ class TestQuantileReturns(unittest.TestCase):
         self.returns_nan.loc[(dates[2], 'A')] = np.nan
 
     def test_quantile_returns_basic(self):
-        qrets = quantile_returns.quantile_returns(self.factor, self.returns, n_quantiles=3)
+        qrets = quantile_returns(self.factor, self.returns, n_quantiles=3)
         print(qrets)
         self.assertEqual(qrets.shape, (3, 3))
         # For perfect monotonic, each quantile should have 2 stocks per date
@@ -30,27 +30,27 @@ class TestQuantileReturns(unittest.TestCase):
             self.assertTrue(np.allclose(qrets.loc[d].values, [15, 35, 55]))
 
     def test_quantile_returns_custom_labels(self):
-        qrets = quantile_returns.quantile_returns(self.factor, self.returns, n_quantiles=2, quantile_labels=['low', 'high'])
+        qrets = quantile_returns(self.factor, self.returns, n_quantiles=2, quantile_labels=['low', 'high'])
         self.assertListEqual(list(qrets.columns), ['low', 'high'])
 
     def test_quantile_returns_constant(self):
-        qrets = quantile_returns.quantile_returns(self.factor_const, self.returns, n_quantiles=3)
+        qrets = quantile_returns(self.factor_const, self.returns, n_quantiles=3)
         # All assigned to middle quantile for first date
         self.assertTrue((qrets.loc[qrets.index[0]].dropna().index == 2).all())
 
     def test_quantile_returns_nan(self):
-        qrets = quantile_returns.quantile_returns(self.factor, self.returns_nan, n_quantiles=3)
+        qrets = quantile_returns(self.factor, self.returns_nan, n_quantiles=3)
         print(qrets)
 
     def test_quantile_spread(self):
-        qrets = quantile_returns.quantile_returns(self.factor, self.returns, n_quantiles=3)
-        spread = quantile_returns.quantile_spread(qrets)
+        qrets = quantile_returns(self.factor, self.returns, n_quantiles=3)
+        spread = quantile_spread(qrets)
         print(spread)
         self.assertTrue(np.allclose(spread, 40))
 
     def test_index_mismatch(self):
         with self.assertRaises(ValueError):
-            quantile_returns.quantile_returns(self.factor, self.returns.drop(self.returns.index[0]))
+            quantile_returns(self.factor, self.returns.drop(self.returns.index[0]))
 
 if __name__ == '__main__':
     unittest.main()
