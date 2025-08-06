@@ -1,10 +1,10 @@
 
 import pandas as pd
-from typing import Literal, Optional
+from typing import Literal
 
 
 def information_coefficient(factor: pd.Series,
-                            returns: pd.Series,
+                            future_returns: pd.Series,
                             method: Literal['pearson', 'spearman'] = 'pearson',
                             min_periods: int = 3) -> pd.Series:
     """
@@ -15,8 +15,8 @@ def information_coefficient(factor: pd.Series,
     ----------
     factor: pd.Series 
         with MultiIndex (date, ticker)
-    returns: pd.Series
-        with MultiIndex (date, ticker)
+    future_returns: pd.Series
+        with MultiIndex (date, ticker), notice that this is future returns, not past returns (Avoid lookahead bias)
     method: Literal['pearson', 'spearman']
         Default 'pearson'. Correlation method to use.
     min_periods: int
@@ -26,11 +26,11 @@ def information_coefficient(factor: pd.Series,
     pd.Series
         IC values indexed by date
     """
-    if not factor.index.equals(returns.index):
+    if not factor.index.equals(future_returns.index):
         raise ValueError("Indices of factor and returns must match.")
     if method not in ('pearson', 'spearman'):
         raise ValueError("method must be 'pearson' or 'spearman'")
-    df = pd.DataFrame({'factor': factor, 'returns': returns})
+    df = pd.DataFrame({'factor': factor, 'returns': future_returns})
     def compute_ic(group):
         # If all values are nan or constant, corr returns nan
         if group['factor'].nunique(dropna=True) <= 1 or group['returns'].nunique(dropna=True) <= 1:
