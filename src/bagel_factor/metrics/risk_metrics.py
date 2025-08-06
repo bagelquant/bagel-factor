@@ -83,7 +83,7 @@ def sharpe_ratio(
         Risk-free rate per period, in the same return type as `returns`.
     periods_per_year : int, default 252
         Number of periods in a year (e.g., 252 for daily returns).
-    return_type : {'log', 'normal'}, default 'normal'
+    return_type : {'log', 'normal'}, default 'log'
         Type of returns provided. If 'log', input is log returns. If 'normal', input is arithmetic returns.
 
     Returns
@@ -123,7 +123,7 @@ def max_drawdown(
     ----------
     returns : pd.Series
         Periodic returns (log or normal, as specified by `return_type`).
-    return_type : {'log', 'normal'}, default 'normal'
+    return_type : {'log', 'normal'}, default 'log'
         Type of returns provided. If 'log', input is log returns. If 'normal', input is arithmetic returns.
 
     Returns
@@ -151,7 +151,7 @@ def calmar_ratio(
         Periodic returns (log or normal, as specified by `return_type`).
     periods_per_year : int, default 252
         Number of periods in a year (e.g., 252 for daily returns).
-    return_type : {'log', 'normal'}, default 'normal'
+    return_type : {'log', 'normal'}, default 'log'
         Type of returns provided. If 'log', input is log returns. If 'normal', input is arithmetic returns.
 
     Returns
@@ -229,7 +229,7 @@ def sortino_ratio(
         Risk-free rate per period, in the same return type as `returns`.
     periods_per_year : int, default 252
         Number of periods in a year (e.g., 252 for daily returns).
-    return_type : {'log', 'normal'}, default 'normal'
+    return_type : {'log', 'normal'}, default 'log'
         Type of returns provided. If 'log', input is log returns. If 'normal', input is arithmetic returns.
 
     Returns
