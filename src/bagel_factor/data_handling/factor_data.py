@@ -119,7 +119,7 @@ metadata: {self.metadata}
     def __str__(self) -> str:
         return self.__repr__()
     
-    """=== Properties methods ==="""
+    # Properties
     @property
     def start_date(self) -> pd.Timestamp:
         return self.factor_data.index.get_level_values('date').min()
