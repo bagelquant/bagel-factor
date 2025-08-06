@@ -38,15 +38,23 @@ This package aims to provide a universal, high-performance toolkit for evaluatin
 5. **Parallelization (Optional)**
     - Optional support for multi-core computation (via `numba`, `joblib`, or similar)
 
+## Interface Design
+
+User interactions with the package will be through at least two main classes:
+
+- **Evaluator**: handles the adding data, computing metrics, and running backtests.
+- **Visualizer**: manages plotting and exporting results.
+
 ### Implementation Plan
 
-1. Define data structures and input validation logic
-2. Implement core metric calculations (IC, quantile returns, etc.)
-3. Develop backtesting module
-4. Add visualization utilities
-5. Write documentation and usage examples
-6. Optimize for performance and add optional parallelization
-7. Package for PyPI and provide installation instructions
+1. Define the structure of the project
+2. Define data structures and input validation logic
+3. Implement core metric calculations (IC, quantile returns, etc.)
+4. Develop backtesting module
+5. Add visualization utilities
+6. Write documentation and usage examples
+7. Optimize for performance and add optional parallelization
+8. Package for PyPI and provide installation instructions
 
 ### Dependencies
 
