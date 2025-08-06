@@ -3,10 +3,12 @@ import pandas as pd
 from typing import Literal
 
 
-def information_coefficient(factor: pd.Series,
-                            future_returns: pd.Series,
-                            method: Literal['pearson', 'spearman'] = 'pearson',
-                            min_periods: int = 3) -> pd.Series:
+def information_coefficient(
+    factor: pd.Series,
+    future_returns: pd.Series,
+    method: Literal['pearson', 'spearman'] = 'pearson',
+    min_periods: int = 3
+) -> pd.Series:
     """
     Compute the Information Coefficient (IC) between factor and future returns, grouped by date.
     IC is the cross-sectional correlation (Pearson or Spearman) between factor and returns for each date.
