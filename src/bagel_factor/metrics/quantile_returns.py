@@ -53,7 +53,8 @@ def quantile_returns(
             return np.nan
         return x.mean()
     result = df.groupby([df.index.get_level_values('date'), 'quantile'])['future_returns'].apply(mean_with_min).unstack('quantile')
-    return result
+    # Shift result by one row to align quantile returns with the current date
+    return result.shift(1).dropna(how='all')
 
 def quantile_spread(
     quantile_returns_df: pd.DataFrame,
