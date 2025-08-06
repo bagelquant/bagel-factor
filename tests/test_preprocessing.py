@@ -1,187 +1,76 @@
 import unittest
-import json
 import pandas as pd
-from datetime import datetime
+import numpy as np
+from src.bagel_factor import preprocessing
 
-from src.bagel_factor import get_engine, read_mysql
-from src.bagel_factor import standardize, z_score, min_max, robust
-from src.bagel_factor import impute_missing, fill_mean, fill_median, fill_zero
-from src.bagel_factor import handle_outliers, clip_zscore, clip_iqr
+class TestPreprocessingMethods(unittest.TestCase):
+    def setUp(self):
+        # Create a MultiIndex Series: 3 dates, 4 tickers
+        dates = pd.date_range('2023-01-01', periods=3)
+        tickers = ['A', 'B', 'C', 'D']
+        idx = pd.MultiIndex.from_product([dates, tickers], names=['date', 'ticker'])
+        values = np.arange(12, dtype=float)
+        self.s = pd.Series(values, index=idx)
+        # Add a constant group for minmax edge case
+        self.s_const = self.s.copy()
+        self.s_const.loc[(dates[0], slice(None))] = 5.0
 
+    def test_cross_sectional_zscore(self):
+        z = preprocessing.cross_sectional_zscore(self.s)
+        for d in self.s.index.get_level_values('date').unique():
+            group = z.loc[d]
+            self.assertAlmostEqual(group.mean(), 0, places=7)
+            self.assertAlmostEqual(group.std(ddof=0), 1, places=7)
 
-class TestMissingDataImputation(unittest.TestCase):
+    def test_cross_sectional_minmax(self):
+        mm = preprocessing.cross_sectional_minmax(self.s)
+        for d in self.s.index.get_level_values('date').unique():
+            group = mm.loc[d]
+            self.assertAlmostEqual(group.min(), 0, places=7)
+            self.assertAlmostEqual(group.max(), 1, places=7)
+        # Constant group should be 0.0
+        mm_const = preprocessing.cross_sectional_minmax(self.s_const)
+        self.assertTrue((mm_const.loc[self.s.index.get_level_values('date')[0]] == 0.0).all())
 
-    def setUp(self) -> None:
-        self.data = pd.DataFrame({
-            'date': ['2021-01-01', '2021-01-01', '2021-01-02', '2021-01-02'],
-            'ticker': ['A', 'B', 'A', 'B'],
-            'price': [10, None, 15, None],
-            'volume': [100, 200, None, 400]
-        })
+    def test_cross_sectional_rank(self):
+        # Ascending, dense
+        r = preprocessing.cross_sectional_rank(self.s, method='dense', ascending=True)
+        for d in self.s.index.get_level_values('date').unique():
+            orig = self.s.loc[d]
+            group = r.loc[d]
+            expected = orig.rank(method='dense', ascending=True)
+            pd.testing.assert_series_equal(group, expected)
+        # Descending, min
+        r_desc = preprocessing.cross_sectional_rank(self.s, method='min', ascending=False)
+        for d in self.s.index.get_level_values('date').unique():
+            orig = self.s.loc[d]
+            group = r_desc.loc[d]
+            expected = orig.rank(method='min', ascending=False)
+            pd.testing.assert_series_equal(group, expected)
 
-    def test_fill_mean(self):
-        print("====== Testing Fill Mean Imputation ======")
-        result = impute_missing(self.data, data_fields='price', method=fill_mean, cross_section=True, suffix='mean')
-        self.assertIn('price_mean', result.columns)
-        self.assertFalse(result['price_mean'].isna().any())
-        # Check mean imputation for the missing value
-        print(result)
+    def test_cross_sectional_winsorize(self):
+        # Add outliers
+        s_out = self.s.copy()
+        s_out.loc[(self.s.index.get_level_values('date')[0], 'A')] = 1000
+        w = preprocessing.cross_sectional_winsorize(s_out, lower=0.1, upper=0.9)
+        for d in s_out.index.get_level_values('date').unique():
+            group = s_out.loc[d]
+            wgroup = w.loc[d]
+            lower_val = group.quantile(0.1)
+            upper_val = group.quantile(0.9)
+            self.assertTrue((wgroup >= lower_val - 1e-8).all())
+            self.assertTrue((wgroup <= upper_val + 1e-8).all())
 
+    def test_preprocessingmethod_type(self):
+        # All methods should be valid PreprocessingMethod
+        for fn in [preprocessing.cross_sectional_zscore,
+                   preprocessing.cross_sectional_minmax,
+                   lambda s: preprocessing.cross_sectional_rank(s, method='dense'),
+                   preprocessing.cross_sectional_winsorize]:
+            self.assertTrue(callable(fn))
+            out = fn(self.s)
+            self.assertIsInstance(out, pd.Series)
+            self.assertTrue(out.index.equals(self.s.index))
 
-    def test_fill_median(self):
-        print("====== Testing Fill Median Imputation ======")
-        result = impute_missing(self.data, data_fields='volume', method=fill_median, cross_section=True, suffix='median')
-        self.assertIn('volume_median', result.columns)
-        self.assertFalse(result['volume_median'].isna().any())
-        print(result)
-
-    def test_fill_zero(self):
-        print("====== Testing Fill Zero Imputation ======")
-        result = impute_missing(self.data, data_fields=['price', 'volume'], method=fill_zero, cross_section=True, suffix='zero')
-        self.assertIn('price_zero', result.columns)
-        self.assertIn('volume_zero', result.columns)
-        self.assertTrue((result['price_zero'] == 0).iloc[1])
-        self.assertTrue((result['volume_zero'] == 0).iloc[2])
-        print(result)
-
-class TestOutlierHandling(unittest.TestCase):
-
-    def setUp(self) -> None:
-        self.data = pd.DataFrame({
-            'date': ['2021-01-01', '2021-01-01', '2021-01-02', '2021-01-02'],
-            'ticker': ['A', 'B', 'A', 'B'],
-            'price': [10, 1000, 15, 2000],
-            'volume': [100, 200, 3000, 400]
-        })
-
-    def test_clip_zscore(self):
-        print("====== Testing Clip Z-Score Outlier Handling ======")
-        result = handle_outliers(self.data, data_fields='price', method=clip_zscore, cross_section=True, suffix='z', threshold=1.0)
-        self.assertIn('price_z', result.columns)
-        # Check that outliers are clipped
-        max_val = result[result['date'] == '2021-01-01']['price_z'].max()
-        min_val = result[result['date'] == '2021-01-01']['price_z'].min()
-        self.assertLessEqual(max_val, result[result['date'] == '2021-01-01']['price_z'].mean() + 1.0 * result[result['date'] == '2021-01-01']['price_z'].std())
-        self.assertGreaterEqual(min_val, result[result['date'] == '2021-01-01']['price_z'].mean() - 1.0 * result[result['date'] == '2021-01-01']['price_z'].std())
-        print(result)
-
-    def test_clip_iqr(self):
-        print("====== Testing Clip IQR Outlier Handling ======")
-        result = handle_outliers(self.data, data_fields='volume', method=clip_iqr, cross_section=True, suffix='iqr', threshold=0.5)
-        self.assertIn('volume_iqr', result.columns)
-        # Check that outliers are clipped
-        q1 = self.data[self.data['date'] == '2021-01-02']['volume'].quantile(0.25)
-        q3 = self.data[self.data['date'] == '2021-01-02']['volume'].quantile(0.75)
-        iqr = q3 - q1
-        lower = q1 - 0.5 * iqr
-        upper = q3 + 0.5 * iqr
-        clipped = result[(result['date'] == '2021-01-02')]['volume_iqr']
-        self.assertTrue((clipped >= lower).all() and (clipped <= upper).all())
-        print(result)
-
-class TestStandardizationMethods(unittest.TestCase):
-
-    def setUp(self) -> None:
-        # setup database connection
-        with open('tests/db_config.json', 'r') as f:
-            db_config = json.load(f)
-        self.engine = get_engine(
-            host=db_config['host'],
-            port=db_config['port'],
-            user=db_config['user'],
-            password=db_config['password'],
-            database=db_config['database']
-        )
-        
-        # get test data
-        self.test_data = read_mysql(
-            engine=self.engine,
-            table_name='daily',
-            data_fields=['close', 'open'],
-            tickers=['000001.SZ', '600000.SH', '000002.SZ', '600004.SH'],
-            start=datetime(2020, 1, 1),
-            end=datetime(2020, 1, 9)
-        )
-    
-    def test_z_score_standardization(self):
-        print("====== Testing Z-Score Standardization ======")
-        standardized_data = standardize(
-            data=self.test_data,
-            data_fields='close',
-            method=z_score,
-            cross_section=True,
-            suffix='z'
-        )
-        self.assertIn('close_z', standardized_data.columns)
-        self.assertTrue((standardized_data['close_z'].mean() - 0) < 1e-6)
-        self.assertTrue((standardized_data['close_z'].std() - 1) < 1e-6)
-        print(standardized_data[['close', 'close_z']].head())
-    
-    def test_z_score_multiple_fields(self):
-        print("====== Testing Z-Score Standardization with Multiple Fields ======")
-        standardized_data = standardize(
-            data=self.test_data,
-            data_fields=['close', 'open'],
-            method=z_score,
-            cross_section=True,
-            suffix='z'
-        )
-        self.assertIn('close_z', standardized_data.columns)
-        self.assertIn('open_z', standardized_data.columns)
-        self.assertTrue((standardized_data['close_z'].mean() - 0) < 1e-6)
-        self.assertTrue((standardized_data['open_z'].mean() - 0) < 1e-6)
-        print(standardized_data[['close', 'close_z', 'open', 'open_z']].head())
-    
-    def test_z_score_time_series(self):
-        print("====== Testing Z-Score Standardization with Time Series ======")
-        standardized_data = standardize(
-            data=self.test_data,
-            data_fields='close',
-            method=z_score,
-            cross_section=False,
-            suffix='z'
-        )
-        self.assertIn('close_z', standardized_data.columns)
-        self.assertTrue((standardized_data['close_z'].mean() - 0) < 1e-6)
-        self.assertTrue((standardized_data['close_z'].std() - 1) < 1e-6)
-        # select a specific ticker for demonstration
-        print(standardized_data.loc[pd.IndexSlice[:, '000001.SZ'], ['close', 'close_z']].head())
-    
-    def test_z_score_without_suffix(self):
-        print("====== Testing Z-Score Standardization Without Suffix ======")
-        standardized_data = standardize(
-            data=self.test_data,
-            data_fields='close',
-            method=z_score,
-            cross_section=True,
-            suffix=None
-        )
-        self.assertIn('close', standardized_data.columns)
-        self.assertTrue((standardized_data['close'].mean() - 0) < 1e-6)
-        self.assertTrue((standardized_data['close'].std() - 1) < 1e-6)
-        print(standardized_data[['close']].head())
-            
-    def test_min_max_standardization(self):
-        print("====== Testing Min-Max Standardization ======")
-        standardized_data = standardize(
-            data=self.test_data,
-            data_fields='close',
-            method=min_max,
-            cross_section=True,
-            suffix='minmax'
-        )
-        self.assertIn('close_minmax', standardized_data.columns)
-        self.assertTrue((standardized_data['close_minmax'].min() - 0) < 1e-6)
-        self.assertTrue((standardized_data['close_minmax'].max() - 1) < 1e-6)
-        print(standardized_data[['close', 'close_minmax']].head())
-
-    def test_robust_standardization(self):
-        print("====== Testing Robust Standardization ======")
-        standardized_data = standardize(
-            data=self.test_data,
-            data_fields='close',
-            method=robust,
-            cross_section=True,
-            suffix='robust'
-        )
-        print(standardized_data[['close', 'close_robust']].head())
+if __name__ == '__main__':
+    unittest.main()
