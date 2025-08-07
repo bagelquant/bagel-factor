@@ -42,8 +42,7 @@ bagel_factor/
 │   └── risk_metrics.py             # Risk and return metrics (Sharpe, Sortino, drawdown)
 ├── visualization/                # Module for plotting and exporting results
 │   ├── __init__.py
-│   ├── plots.py                    # Plotting functions
-│   └── export.py                   # Exporting results to files
+│   └── plots.py                    # Plotting functions
 └── utils/                        # Utility functions
     ├── __init__.py
     └── helpers.py                  # Helper functions
