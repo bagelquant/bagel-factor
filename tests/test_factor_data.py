@@ -76,7 +76,6 @@ class TestFactorData(unittest.TestCase):
     def test_repr_and_str(self):
         r = repr(self.fd)
         s = str(self.fd)
-        print(self.fd)
         self.assertEqual(r, s)
 
     def test_properties(self):

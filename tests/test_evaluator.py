@@ -32,72 +32,57 @@ class TestEvaluator(unittest.TestCase):
         mean_spearman = self.evaluator.ic_mean('spearman')
         self.assertIsInstance(mean_pearson, float)
         self.assertIsInstance(mean_spearman, float)
-        print(f"Mean IC (Pearson): {mean_pearson}, Mean IC (Spearman): {mean_spearman}")
 
     def test_ic_std(self):
         std_pearson = self.evaluator.ic_std('pearson')
         std_spearman = self.evaluator.ic_std('spearman')
         self.assertIsInstance(std_pearson, float)
         self.assertIsInstance(std_spearman, float)
-        print(f"IC Std (Pearson): {std_pearson}, IC Std (Spearman): {std_spearman}")
 
     def test_ic_ir(self):
         ir_pearson = self.evaluator.ic_ir('pearson')
         ir_spearman = self.evaluator.ic_ir('spearman')
         self.assertIsInstance(ir_pearson, float)
         self.assertIsInstance(ir_spearman, float)
-        print(f"IC IR (Pearson): {ir_pearson}, IC IR (Spearman): {ir_spearman}")
 
     def test_quantile_return_df(self):
         qret = self.evaluator.quantile_return_df()
         self.assertIsInstance(qret, pd.DataFrame)
         self.assertGreater(qret.shape[0], 0)
-        print(f"Quantile Return DataFrame shape: {qret.shape}")
-        print(qret.head())
 
     def test_quantile_spread_series(self):
         spread = self.evaluator.quantile_spread_series()
         self.assertIsInstance(spread, pd.Series)
         self.assertGreater(spread.shape[0], 0)
-        print(f"Quantile Spread Series shape: {spread.shape}")
-        print(spread.head())
 
     def test_quantile_spread_cum_return(self):
         cumret = self.evaluator.quantile_spread_cum_return()
         self.assertIsInstance(cumret, pd.Series)
         self.assertGreater(cumret.shape[0], 0)
-        print(f"Quantile Spread Cumulative Return shape: {cumret.shape}")
-        print(cumret.head())
 
     def test_quantile_spread_annualized_volatility(self):
         vol = self.evaluator.quantile_spread_annualized_volatility()
         self.assertIsInstance(vol, float)
-        print(f"Quantile Spread Annualized Volatility: {vol}")
 
     def test_quantile_spread_sharpe_ratio(self):
         sharpe = self.evaluator.quantile_spread_sharpe_ratio()
         self.assertIsInstance(sharpe, float)
-        print(f"Quantile Spread Sharpe Ratio: {sharpe}")
 
     def test_quantile_spread_max_drawdown(self):
         mdd = self.evaluator.quantile_spread_max_drawdown()
         self.assertIsInstance(mdd, float)
-        print(f"Quantile Spread Max Drawdown: {mdd}")
 
     def test_quantile_spread_calmar_ratio(self):
         calmar = self.evaluator.quantile_spread_calmar_ratio()
         self.assertIsInstance(calmar, float)
-        print(f"Quantile Spread Calmar Ratio: {calmar}")
 
     def test_quantile_spread_downside_risk(self):
         downside = self.evaluator.quantile_spread_downside_risk()
         self.assertIsInstance(downside, float)
-        print(f"Quantile Spread Downside Risk: {downside}")
 
     def test_quantile_spread_sortino_ratio(self):
         sortino = self.evaluator.quantile_spread_sortino_ratio()
         self.assertIsInstance(sortino, float)
-        print(f"Quantile Spread Sortino Ratio: {sortino}")
 
 if __name__ == '__main__':
     unittest.main()

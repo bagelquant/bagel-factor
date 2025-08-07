@@ -22,8 +22,6 @@ class TestQuantileReturns(unittest.TestCase):
 
     def test_quantile_returns_basic(self):
         qrets = quantile_returns(self.factor, self.futuren_returns, n_quantiles=3)
-        print(self.futuren_returns)
-        print(qrets)
         self.assertEqual(qrets.shape, (2, 3))
         # For perfect monotonic, each quantile should have 2 stocks per date
         for d in qrets.index:
@@ -41,12 +39,10 @@ class TestQuantileReturns(unittest.TestCase):
 
     def test_quantile_returns_nan(self):
         qrets = quantile_returns(self.factor, self.returns_nan, n_quantiles=3)
-        print(qrets)
 
     def test_quantile_spread(self):
         qrets = quantile_returns(self.factor, self.futuren_returns, n_quantiles=3)
         spread = quantile_spread(qrets)
-        print(spread)
         self.assertTrue(np.allclose(spread, 40))
 
     def test_index_mismatch(self):
