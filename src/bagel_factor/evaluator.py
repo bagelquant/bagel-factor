@@ -26,7 +26,6 @@ from .metrics import (
 
 
 @dataclass(slots=True)
-
 class Evaluator:
     """
     Evaluator for factor performance and risk metrics.
