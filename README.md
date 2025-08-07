@@ -13,29 +13,39 @@ Bagel Factor is a universal, high-performance Python library for evaluating quan
 
 ### Core Modules
 
-- **Factor Data Handling**: Standardized input format for factor values, returns, and metadata. Multi-indexed DataFrame support. Data validation and cleaning utilities.
-- **Performance Metrics**: Information Coefficient (IC/Rank IC), quantile/group return analysis, turnover, Sharpe/Sortino ratios, drawdown, and custom metric registration.
-- **Visualization**: Built-in plotting for IC time series, quantile returns, turnover, and more. Export to CSV, Excel, and image formats.
-- **Parallelization (Optional)**: Multi-core computation support via `numba`, `joblib`, or similar.
+- [**data_handling**](docs/modules/data_handling.md): Robust tools for factor data management, including validation, cleaning, and preprocessing. Supports multi-indexed Series/DataFrames and extensible metadata.
+- [**metrics**](docs/modules/metrics.md): Comprehensive performance and risk metrics, including Information Coefficient (IC), quantile/group return analysis, Sharpe/Sortino ratios, drawdown, and more.
+- [**visualization**](docs/modules/visualization.md): Publication-quality plotting utilities for IC time series, quantile returns, and cumulative spread returns.
+- [**evaluator**](docs/modules/evaluator.md): High-level interface for orchestrating data handling, metric computation, and risk analysis. Central entry point for users.
 
-## Implementation Plan
+## Quick Start Example
 
-1. Define data structures and input validation logic
-2. Implement core metric calculations (IC, quantile returns, etc.)
-3. Develop backtesting module
-4. Add visualization utilities
-5. Write documentation and usage examples
-6. Optimize for performance and add optional parallelization
-7. Package for PyPI and provide installation instructions
+```python
+from bagel_factor import FactorData, create_factor_data_from_df  # Data handling utilities
+from bagel_factor import Evaluator  # Core evaluation
+from bagel_factor import plots  # Visualization utilities
 
-## Dependencies
+# Prepare factor and returns data (as DataFrame or Series)
+factor_data = create_factor_data_from_df(factor_df)
+future_returns = create_factor_data_from_df(returns_df)
+
+# Initialize evaluator
+evaluator = Evaluator(factor_data, future_returns, future_returns)
+
+# Compute IC and quantile returns
+ic_mean = evaluator.ic_mean()
+qret = evaluator.quantile_return_df()
+
+# Plot IC time series
+fig = plots.plot_ic_series(evaluator.ic_series())
+fig.show()
+```
 
 - Python 3.8+
 - pandas
 - numpy
 - statsmodels (for statistical tests)
 - matplotlib/seaborn (for visualization)
-- (Optional) numba/joblib for parallelization
 
 ## Contact
 

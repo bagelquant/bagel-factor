@@ -30,7 +30,6 @@ bagel-factor/
 bagel_factor/
 ├── __init__.py                     # Package initialization
 ├── evaluator.py                    # Interface: main class for factor evaluation
-├── visualizer.py                   # Interface: Class for visualization and exporting results
 ├── data_handling/                # Module for data input, validation, and preprocessing
 │   ├── __init__.py
 │   ├── factor_data.py              # Class for handling factor data
