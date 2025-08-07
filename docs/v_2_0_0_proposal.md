@@ -35,10 +35,9 @@ This package aims to provide a universal, high-performance toolkit for evaluatin
 
 ## Interface Design
 
-User interactions with the package will be through at least two main classes:
+User interactions with the package will be through a high-level interface class, `Evaluator`, which orchestrates data handling, metric computation, and visualization. Key methods include:
 
 - **Evaluator**: handles the adding data, computing metrics, and running backtests.
-- **Visualizer**: manages plotting and exporting results.
 
 ### Implementation Plan
 
