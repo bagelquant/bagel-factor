@@ -180,3 +180,4 @@ cython_debug/
 
 # Database config
 tests/db_config.json
+tests/test_data/
