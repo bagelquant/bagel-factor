@@ -105,7 +105,10 @@ def sharpe_ratio(
                 base = float(pd.to_numeric(prod_result, errors='coerce'))
             except Exception:
                 base = float('nan')
-        ann_excess_return: float = base ** (periods_per_year / len(returns)) - 1
+        if base < 0:
+            return np.nan
+        power = periods_per_year / len(returns)
+        ann_excess_return: float = base ** power - 1
     ann_vol = annualized_volatility(returns, periods_per_year, return_type=return_type)
     if ann_vol == 0:
         return np.nan
@@ -172,6 +175,8 @@ def calmar_ratio(
                 base = float(pd.to_numeric(prod_result, errors='coerce'))
             except Exception:
                 base = float('nan')
+        if base < 0:
+            base = 0.0
         ann_return = base ** (periods_per_year / len(returns)) - 1
     mdd = abs(max_drawdown(returns, return_type=return_type))
     if mdd == 0:
@@ -251,6 +256,8 @@ def sortino_ratio(
                 base = float(pd.to_numeric(prod_result, errors='coerce'))
             except Exception:
                 base = float('nan')
+        if base < 0:
+            base = 0.0
         ann_excess_return = base ** (periods_per_year / len(returns)) - 1
     drisk = downside_risk(returns, risk_free_rate, periods_per_year, return_type=return_type)
     if drisk == 0:
