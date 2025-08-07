@@ -52,7 +52,7 @@ def quantile_returns(
         if x.notna().sum() < min_periods:
             return np.nan
         return x.mean()
-    result = df.groupby([df.index.get_level_values('date'), 'quantile'])['future_returns'].apply(mean_with_min).unstack('quantile')
+    result = df.groupby([df.index.get_level_values('date'), 'quantile'], observed=False)['future_returns'].apply(mean_with_min).unstack('quantile')
     # Shift result by one row to align quantile returns with the current date
     return result.shift(1).dropna(how='all')
 
