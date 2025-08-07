@@ -138,27 +138,27 @@ class Evaluator:
         self._quantile_spread_series = quantile_spread(self._quantile_return_df)
     
     # === Results (IC) ===
-    def ic_mean(self, method: Literal["pearson", "spearman"] = "pearson") -> float:
-        """Mean of IC series over evaluation period for given method."""
+    def ic_series(self, method: Literal["pearson", "spearman"] = "pearson") -> pd.Series:
+        """
+        Get IC series for the specified method.
+        If not calculated, computes and caches it.
+        """
         attr = f"_ic_series_{method}"
         if not hasattr(self, attr):
             self._calculate_ic_series(method)
-        return getattr(self, attr).loc[self._start_date:self._end_date].mean()
+        return getattr(self, attr).loc[self._start_date:self._end_date]
+
+    def ic_mean(self, method: Literal["pearson", "spearman"] = "pearson") -> float:
+        """Mean of IC series over evaluation period for given method."""
+        return self.ic_series(method).mean()
 
     def ic_std(self, method: Literal["pearson", "spearman"] = "pearson") -> float:
         """Std of IC series over evaluation period for given method."""
-        attr = f"_ic_series_{method}"
-        if not hasattr(self, attr):
-            self._calculate_ic_series(method)
-        return getattr(self, attr).loc[self._start_date:self._end_date].std()
+        return self.ic_series(method).std()
 
     def ic_ir(self, method: Literal["pearson", "spearman"] = "pearson") -> float:
         """Information Ratio of IC series (annualized) for given method."""
-        attr = f"_ic_series_{method}"
-        if not hasattr(self, attr):
-            self._calculate_ic_series(method)
-        ic_series = getattr(self, attr).loc[self._start_date:self._end_date]
-        return ic_series.mean() / ic_series.std() * (self.periods_per_year ** 0.5)
+        return self.ic_series(method).mean() / self.ic_series(method).std() * (self.periods_per_year ** 0.5)
 
     # === Results (Quantile Returns) properties ===
     def quantile_return_df(self) -> pd.DataFrame:
