@@ -32,12 +32,12 @@ def information_coefficient(
         raise ValueError("Indices of factor and returns must match.")
     if method not in ('pearson', 'spearman'):
         raise ValueError("method must be 'pearson' or 'spearman'")
-    df = pd.DataFrame({'factor': factor, 'returns': future_returns})
+    df = pd.DataFrame({'factor': factor, 'future_returns': future_returns})
     def compute_ic(group):
-        # If all values are nan or constant, corr returns nan
-        if group['factor'].nunique(dropna=True) <= 1 or group['returns'].nunique(dropna=True) <= 1:
+        # If all values are nan or constant, corr future_returns nan
+        if group['factor'].nunique(dropna=True) <= 1 or group['future_returns'].nunique(dropna=True) <= 1:
             return float('nan')
-        return group['factor'].corr(group['returns'], method=method, min_periods=min_periods)
+        return group['factor'].corr(group['future_returns'], method=method, min_periods=min_periods)
     ic_series = df.groupby(df.index.get_level_values('date')).apply(compute_ic)
     ic_series.name = f'IC_{method}'
     return ic_series

@@ -26,12 +26,10 @@ class TestInformationCoefficient(unittest.TestCase):
     def test_ic_pearson_perfect(self):
         ic_series = ic.information_coefficient(self.factor, self.returns, method='pearson')
         self.assertTrue(np.allclose(ic_series, 1.0, equal_nan=False))
-        print(ic_series)
 
     def test_ic_spearman_perfect(self):
         ic_series = ic.information_coefficient(self.factor, self.returns, method='spearman')
         self.assertTrue(np.allclose(ic_series, 1.0, equal_nan=False))
-        print(ic_series)
 
     def test_ic_with_constant_group(self):
         ic_series = ic.information_coefficient(self.factor_const, self.returns, method='pearson')

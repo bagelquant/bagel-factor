@@ -5,11 +5,10 @@ from typing import Optional, Union
 
 def quantile_returns(
     factor: pd.Series,
-    returns: pd.Series,
+    future_returns: pd.Series,
     n_quantiles: int = 10,
     quantile_labels: Optional[Union[list, None]] = None,
-    min_periods: int = 1,
-    quantile_range: Optional[tuple] = None
+    min_periods: int = 1
 ) -> pd.DataFrame:
     """
     Compute mean future returns for each factor quantile, grouped by date.
@@ -26,18 +25,16 @@ def quantile_returns(
         Custom labels for quantiles (default None, uses 1..n_quantiles)
     min_periods: int
         Minimum number of stocks in a quantile to compute mean return (default 1)
-    quantile_range: tuple or None
-        (min, max) range for quantile calculation (default None, uses full range)
     Returns
     -------
     pd.DataFrame
         index: date, columns: quantile label, values: mean return for each quantile/date
     """
-    if not factor.index.equals(returns.index):
+    if not factor.index.equals(future_returns.index):
         raise ValueError("Indices of factor and returns must match.")
     if quantile_labels is None:
         quantile_labels = list(range(1, n_quantiles + 1))
-    df = pd.DataFrame({'factor': factor, 'returns': returns})
+    df = pd.DataFrame({'factor': factor, 'future_returns': future_returns})
     def assign_quantile(x):
         # If all values are nan or constant, assign all to middle quantile
         if x['factor'].nunique(dropna=True) <= 1:
@@ -55,8 +52,9 @@ def quantile_returns(
         if x.notna().sum() < min_periods:
             return np.nan
         return x.mean()
-    result = df.groupby([df.index.get_level_values('date'), 'quantile'])['returns'].apply(mean_with_min).unstack('quantile')
-    return result
+    result = df.groupby([df.index.get_level_values('date'), 'quantile'], observed=False)['future_returns'].apply(mean_with_min).unstack('quantile')
+    # Shift result by one row to align quantile returns with the current date
+    return result.shift(1).dropna(how='all')
 
 def quantile_spread(
     quantile_returns_df: pd.DataFrame,

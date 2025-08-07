@@ -57,20 +57,11 @@ class FactorData:
         filtered = self.factor_data[universe_mask]
         return FactorData(factor_data=filtered, metadata=self.metadata.copy(), factor_name=self.factor_name)
 
-    def align_with(self, other: 'FactorData') -> 'FactorData':
+    def is_aligned(self, other: 'FactorData') -> bool:
         """
-        Align factor data index with another FactorData object.
-        :Returns a new FactorData with only the common index.
+        Check if the factor data index is aligned with another FactorData object.
         """
-        idx1 = self.factor_data.index
-        idx2 = other.factor_data.index
-        if not isinstance(idx1, pd.MultiIndex) or not isinstance(idx2, pd.MultiIndex):
-            raise ValueError("Both factor_data indices must be MultiIndex.")
-        common_idx = idx1.intersection(idx2)
-        if len(common_idx) == 0:
-            raise ValueError("No common index between the two FactorData objects.")
-        aligned = self.factor_data.loc[common_idx]
-        return FactorData(factor_data=aligned, metadata=self.metadata.copy(), factor_name=self.factor_name)
+        return self.factor_data.index.equals(other.factor_data.index)
 
     def standardize(self, method: PreprocessingMethod) -> 'FactorData':
         """
