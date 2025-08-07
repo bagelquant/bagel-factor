@@ -49,8 +49,8 @@ class TestFactorData(unittest.TestCase):
         # Align with a subset
         idx = self.series.index[:2]
         other = FactorData(factor_data=self.series.loc[idx], metadata=self.metadata, factor_name=self.factor_name)
-        aligned = self.fd.align_with(other)
-        self.assertTrue(aligned.factor_data.index.equals(other.factor_data.index))
+        aligned = self.fd.is_aligned(other)
+        self.assertTrue(aligned)
 
     def test_standardize(self):
         def dummy_method(s):
