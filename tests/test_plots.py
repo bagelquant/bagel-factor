@@ -20,19 +20,16 @@ class TestPlots(unittest.TestCase):
 
     def test_plot_ic_series(self):
         fig = plots.plot_ic_series(self.ic_series)
-        plt.show()
         self.assertIsInstance(fig, Figure)
 
     def test_plot_quantile_returns(self):
         fig = plots.plot_quantile_returns(self.quantile_return_df)
-        plt.show()
         self.assertIsInstance(fig, Figure)
 
     def test_plot_cumulative_spread(self):
         fig = plots.plot_cumulative_spread(self.spread_series, return_type='log')
         self.assertIsInstance(fig, Figure)
         fig2 = plots.plot_cumulative_spread(self.spread_series, return_type='normal')
-        plt.show()
         self.assertIsInstance(fig2, Figure)
 
 if __name__ == '__main__':
