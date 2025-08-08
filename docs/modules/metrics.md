@@ -2,6 +2,8 @@
 
 The `metrics` module provides quantitative performance and risk evaluation tools for factor investing and portfolio analysis. It includes functions for calculating information coefficients, quantile-based returns, and a variety of risk and performance metrics.
 
+All risk metric functions accept `pd.Series | pd.DataFrame` inputs (PEP 604 union types). When a DataFrame is passed, operations are applied column-wise and a DataFrame is returned; with a Series, a scalar or Series is returned depending on context. The `accumulate_return` function mirrors the input type (Series -> Series, DataFrame -> DataFrame).
+
 ## Submodules
 
 ### 1. `ic.py`
@@ -34,7 +36,7 @@ Provides tools for analyzing returns by factor quantiles:
 
 A collection of standard risk and performance metrics for return series:
 
-- **`accumulate_return`**: Computes cumulative returns (log or normal)
+- **`accumulate_return`**: Computes cumulative returns (log or normal). Returns the same type as input (Series/DataFrame).
 - **`annualized_volatility`**: Annualized standard deviation of returns
 - **`sharpe_ratio`**: Annualized Sharpe ratio (risk-adjusted return)
 - **`max_drawdown`**: Maximum drawdown (largest peak-to-trough loss)

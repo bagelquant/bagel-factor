@@ -1,6 +1,6 @@
 # data_handling Module
 
-The `data_handling` module provides core utilities for managing, validating, and preprocessing factor data in quantitative finance workflows. It is designed to ensure robust handling of factor values, including data cleaning, normalization, and flexible metadata support.
+The `data_handling` module provides core utilities for managing, validating, and preprocessing factor data in quantitative finance workflows. It standardizes on `pd.Series` with a MultiIndex of (`date`, `ticker`) and provides ergonomic conversions and fast paths for trusted inputs.
 
 ## Submodules
 

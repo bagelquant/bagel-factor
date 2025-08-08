@@ -1,6 +1,6 @@
 # evaluator Module
 
-The `evaluator` module provides a high-level interface for evaluating the performance and risk characteristics of quantitative factors in equity trading. It is designed to orchestrate data handling, metric computation, and result aggregation, serving as the main entry point for users of the package.
+The `evaluator` module provides a high-level interface for evaluating the performance and risk characteristics of quantitative factors in equity trading. It orchestrates data handling, metric computation, and result aggregation, serving as the main entry point for users. In v2.0.1, users supply price data and Evaluator computes future returns internally with lazy evaluation.
 
 ## Main Class: `Evaluator`
 
@@ -17,24 +17,28 @@ The `Evaluator` class encapsulates the workflow for factor evaluation, including
 
 ```python
 Evaluator(
-    factor_data: FactorData,
-    future_returns_for_ic: FactorData,
-    future_returns_for_quantile: FactorData,
-    factor_name: str = 'factor',
-    return_type: Literal['log', 'normal'] = 'log',
-    metadata: dict = {},
-    periods_per_year: int = 252,
-    n_quantiles: int = 10
+  factor_data: FactorData,
+  price_data: FactorData,
+  factor_name: str = 'factor',
+  return_type: Literal['log', 'normal'] = 'log',
+  metadata: dict = {},
+  periods_per_year: int = 252,
+  n_quantiles: int = 10,
+  ic_horizon: int = 1,
+  rebalance_period: int = 1,
 )
 ```
 
-- All inputs are validated and aligned. Factor data is forward-filled per ticker to match returns.
+- Inputs are validated and aligned. Factor data is forward-filled per ticker to match the price index. Future returns are built on-demand from price using `ic_horizon` and `rebalance_period` settings.
 
 ### Key Methods & Properties
 
 - **Setters**
   - `set_start_date(start_date)`: Set evaluation start date
   - `set_end_date(end_date)`: Set evaluation end date
+  - `set_ic_horizon(periods)`: Horizon (index steps) for IC future returns
+  - `set_rebalance_period(periods)`: Horizon/step for quantile tests
+  - `set_return_type('log'|'normal')`: Return convention
 
 - **IC & ICIR**
   - `ic_mean(method='pearson'|'spearman')`: Mean IC over period
