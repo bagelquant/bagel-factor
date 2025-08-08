@@ -2,50 +2,113 @@
 
 ## Overview
 
-Bagel Factor is a universal, high-performance Python library for evaluating quantitative factor performance in equity trading. It is designed to be flexible, extensible, and efficient, leveraging `pandas` and `numpy` for fast computation and easy integration with existing data pipelines. The package supports a wide range of factor types and data frequencies, and provides a modular API for both research and production use.
+Bagel Factor is a universal, high-performance Python library for evaluating quantitative factor performance in equity trading. It’s flexible and efficient, built on `pandas`/`numpy`, and ships with a modular API for research and production.
 
 ## Key Features
 
-- **Universality**: Supports price-based, fundamental, and alternative data factors; works with daily and intraday data.
-- **Performance**: Optimized for speed and memory efficiency using vectorized operations in `numpy`/`pandas`.
-- **Extensibility**: Modular design allows users to add custom metrics, filters, and workflows.
-- **Usability**: Simple, well-documented API with clear input/output formats.
+- Universality: price, fundamental, alternative data; daily or intraday.
+- Performance: vectorized operations; minimal copying.
+- Extensibility: plug in custom metrics and workflows.
+- Usability: clear, typed API and ready-to-use plots.
 
 ### Core Modules
 
-- [**data_handling**](docs/modules/data_handling.md): Robust tools for factor data management, including validation, cleaning, and preprocessing. Supports multi-indexed Series/DataFrames and extensible metadata.
-- [**metrics**](docs/modules/metrics.md): Comprehensive performance and risk metrics, including Information Coefficient (IC), quantile/group return analysis, Sharpe/Sortino ratios, drawdown, and more.
-- [**visualization**](docs/modules/visualization.md): Publication-quality plotting utilities for IC time series, quantile returns, and cumulative spread returns.
-- [**evaluator**](docs/modules/evaluator.md): High-level interface for orchestrating data handling, metric computation, and risk analysis. Central entry point for users.
+- data_handling: Validated containers and preprocessing (Series with MultiIndex of (date, ticker)).
+- metrics: IC, quantile returns, and risk metrics (Sharpe, Sortino, max drawdown, etc.). All risk metrics accept Series or DataFrame inputs.
+- visualization: Plots for IC, quantile analysis, cumulative returns, drawdown, and distributions.
+- evaluator: Orchestrates the full workflow with lazy computation and user-provided price data.
 
-## Quick Start Example
+## Quick Start
 
 ```python
-from bagel_factor import FactorData, create_factor_data_from_df  # Data handling utilities
-from bagel_factor import Evaluator  # Core evaluation
-from bagel_factor import plots  # Visualization utilities
+import pandas as pd
+from bagel_factor import FactorData, Evaluator
+from bagel_factor.visualization.plots import (
+    plot_ic_series,
+    plot_ic_histogram,
+    plot_quantile_returns,
+    plot_quantile_heatmap,
+    plot_cumulative_return,
+    plot_quantile_cumulative,
+    plot_drawdown,
+    plot_return_distribution,
+)
 
-# Prepare factor and returns data (as DataFrame or Series)
-factor_data = create_factor_data_from_df(factor_df)
-future_returns = create_factor_data_from_df(returns_df)
+# Factor and price data as MultiIndex Series: index = (date, ticker)
+factor = ...  # pd.Series
+price = ...   # pd.Series of adjusted close
 
-# Initialize evaluator
-evaluator = Evaluator(factor_data, future_returns, future_returns)
+factor_fd = FactorData(factor, factor_name='my_factor', validate=True, enforce_sorted=False)
+price_fd = FactorData(price, factor_name='price', validate=True, enforce_sorted=False)
 
-# Compute IC and quantile returns
-ic_mean = evaluator.ic_mean()
-qret = evaluator.quantile_return_df()
+ev = Evaluator(factor_data=factor_fd, price_data=price_fd, factor_name='my_factor')
+ev.set_ic_horizon(126)       # horizon for IC future returns
+ev.set_rebalance_period(21)  # horizon/step for quantile tests
 
-# Plot IC time series
-fig = plots.plot_ic_series(evaluator.ic_series())
-fig.show()
+# Metrics
+ic_series = ev.ic_series(method='spearman')
+qret = ev.quantile_return_df()
+spread = ev.quantile_spread_series()
+
+# Plots
+plot_ic_series(ic_series)
+plot_ic_histogram(ic_series)
+plot_quantile_returns(qret)
+# Heatmap shows per-day ranks across quantiles (1 = best)
+plot_quantile_heatmap(qret)
+# Cumulative plots start at 0 with an auto-added pre-date point inferred from index step
+plot_cumulative_return(spread, return_type='log')
+plot_quantile_cumulative(qret, return_type='log')
+plot_drawdown(spread, return_type='log')
+plot_return_distribution(spread)
 ```
 
-- Python 3.8+
-- pandas
-- numpy
-- statsmodels (for statistical tests)
-- matplotlib/seaborn (for visualization)
+## Performance Tips
+
+- Fast construction when inputs are trusted
+
+```python
+from bagel_factor.data_handling import FactorData
+
+fd_fast = FactorData.unsafe_from_series(series, name='my_factor')
+fd_fast2 = FactorData(series, factor_name='my_factor', validate=False, enforce_sorted=False)
+```
+
+- Avoid unnecessary copies
+
+```python
+s_view = fd_fast.to_series(copy=False)
+df_view = fd_fast.to_frame(copy=False)
+payload = fd_fast.to_dict(copy=False)
+```
+
+- Evaluator alignment behavior
+  - If `factor_data.factor_data.index` already equals the price index, the Evaluator skips reindex/ffill.
+  - If your pipeline guarantees alignment, ensure indices match to get the fast path.
+
+```python
+factor = factor.reindex(price.index).groupby(level='ticker').ffill()
+ev = Evaluator(FactorData.unsafe_from_series(factor, name='factor'),
+               FactorData.unsafe_from_series(price, name='price'))
+```
+
+- Direct function calls
+
+```python
+from bagel_factor.metrics import information_coefficient
+from bagel_factor.metrics import quantile_returns, quantile_spread
+
+ic = information_coefficient(factor_series, future_returns_series)
+qret = quantile_returns(factor_series, future_returns_series, n_quantiles=10)
+spread = quantile_spread(qret)
+```
+
+## Requirements
+
+- Python 3.10+
+- pandas, numpy
+- matplotlib, seaborn (plots)
+- statsmodels (optional tests)
 
 ## Contact
 

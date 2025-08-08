@@ -7,7 +7,7 @@ def information_coefficient(
     factor: pd.Series,
     future_returns: pd.Series,
     method: Literal['pearson', 'spearman'] = 'pearson',
-    min_periods: int = 3
+    min_periods_ratio: float = 0.6
 ) -> pd.Series:
     """
     Compute the Information Coefficient (IC) between factor and future returns, grouped by date.
@@ -34,9 +34,7 @@ def information_coefficient(
         raise ValueError("method must be 'pearson' or 'spearman'")
     df = pd.DataFrame({'factor': factor, 'future_returns': future_returns})
     def compute_ic(group):
-        # If all values are nan or constant, corr future_returns nan
-        if group['factor'].nunique(dropna=True) <= 1 or group['future_returns'].nunique(dropna=True) <= 1:
-            return float('nan')
+        min_periods = int(len(group) * min_periods_ratio)
         return group['factor'].corr(group['future_returns'], method=method, min_periods=min_periods)
     ic_series = df.groupby(df.index.get_level_values('date')).apply(compute_ic)
     ic_series.name = f'IC_{method}'

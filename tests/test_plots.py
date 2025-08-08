@@ -27,9 +27,9 @@ class TestPlots(unittest.TestCase):
         self.assertIsInstance(fig, Figure)
 
     def test_plot_cumulative_spread(self):
-        fig = plots.plot_cumulative_spread(self.spread_series, return_type='log')
+        fig = plots.plot_cumulative_return(self.spread_series, return_type='log')
         self.assertIsInstance(fig, Figure)
-        fig2 = plots.plot_cumulative_spread(self.spread_series, return_type='normal')
+        fig2 = plots.plot_cumulative_return(self.spread_series, return_type='normal')
         self.assertIsInstance(fig2, Figure)
 
 if __name__ == '__main__':

@@ -14,9 +14,7 @@ bagel-factor/
 │       └── ...
 ├── tests/
 │   └── ...
-├── examples/
-│   ├── example_notebook_1.ipynb
-│   └── ...
+├── example.ipynb                   # Example notebook at repo root
 ├── .gitignore
 ├── LICENSE
 ├── pyproject.toml
@@ -42,7 +40,5 @@ bagel_factor/
 ├── visualization/                # Module for plotting and exporting results
 │   ├── __init__.py
 │   └── plots.py                    # Plotting functions
-└── utils/                        # Utility functions
-    ├── __init__.py
-    └── helpers.py                  # Helper functions
+└── (optional utils/)
 ```

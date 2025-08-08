@@ -1,27 +1,26 @@
 # visualization Module
 
-The `visualization` module provides plotting utilities for analyzing and presenting factor model results, including information coefficient (IC) time series, quantile returns, and cumulative spread returns. It is designed to work seamlessly with the outputs of the `metrics` module and supports publication-quality visualizations using Matplotlib and Seaborn.
+The `visualization` module provides plotting utilities for analyzing and presenting factor model results, including information coefficient (IC) time series, quantile returns, cumulative and drawdown charts, and distributions. It works seamlessly with outputs of the `metrics` module and supports publication-quality visualizations using Matplotlib and Seaborn.
 
 ## Submodules
 
 ### 1. `plots.py`
 
-Contains functions for visualizing key aspects of factor performance:
+Functions for visualizing key aspects of factor performance:
 
-- **`plot_ic_series`**: Plots the time series of Information Coefficient (IC) values, with an average IC reference line.
-  - **Inputs**: `ic_series` (pd.Series, indexed by date)
-  - **Parameters**: `title` (str, optional)
-  - **Returns**: Matplotlib `Figure`
+- `plot_ic_series(ic_series)`: IC time series with a dashed mean line.
+- `plot_ic_histogram(ic_series, bins=30)`: Histogram of IC values with KDE and mean marker.
+- `plot_quantile_returns(quantile_return_df)`: Bar chart of mean returns by quantile.
+- `plot_quantile_heatmap(quantile_return_df)`: Heatmap of per-day ranks across quantiles (1 = best), highlighting which quantiles led on each date independent of magnitude.
+- `plot_cumulative_return(spread_series, return_type='log')`: Cumulative quantile spread return; starts from zero by auto-prepending a pre-date point based on inferred index step.
+- `plot_quantile_cumulative(quantile_return_df, return_type='log')`: Cumulative return per quantile; also starts from zero as above.
+- `plot_drawdown(returns, return_type='log')`: Drawdown over time from cumulative returns.
+- `plot_return_distribution(returns, bins=30)`: Return distribution; supports overlay for DataFrame inputs.
 
-- **`plot_quantile_returns`**: Plots the mean return for each factor quantile as a bar chart.
-  - **Inputs**: `quantile_return_df` (pd.DataFrame, columns: quantiles)
-  - **Parameters**: `title` (str, optional)
-  - **Returns**: Matplotlib `Figure`
+Notes:
 
-- **`plot_cumulative_spread`**: Plots the cumulative return of the quantile spread strategy over time.
-  - **Inputs**: `spread_series` (pd.Series, indexed by date)
-  - **Parameters**: `return_type` ('log' or 'normal'), `title` (str, optional)
-  - **Returns**: Matplotlib `Figure`
+- Most functions accept either `pd.Series` or `pd.DataFrame` where it makes sense.
+- Cumulative plots add one synthetic timestamp before the first index and set value to 0 to emphasize a common starting point.
 
 All plots use a consistent, publication-ready style (`whitegrid`) and a default figure size for clarity.
 
@@ -30,23 +29,29 @@ All plots use a consistent, publication-ready style (`whitegrid`) and a default 
 ## Usage Example
 
 ```python
-from bagel_factor.visualization.plots import plot_ic_series, plot_quantile_returns, plot_cumulative_spread
+from bagel_factor.visualization.plots import (
+  plot_ic_series,
+  plot_ic_histogram,
+  plot_quantile_returns,
+  plot_quantile_heatmap,
+  plot_cumulative_return,
+  plot_quantile_cumulative,
+  plot_drawdown,
+  plot_return_distribution,
+)
 
-# Plot IC time series
-fig1 = plot_ic_series(ic_series)
-fig1.show()
-
-# Plot quantile returns
-fig2 = plot_quantile_returns(quantile_return_df)
-fig2.show()
-
-# Plot cumulative spread return
-fig3 = plot_cumulative_spread(spread_series)
-fig3.show()
+plot_ic_series(ic_series)
+plot_ic_histogram(ic_series)
+plot_quantile_returns(quantile_returns_df)
+plot_quantile_heatmap(quantile_returns_df)  # ranks per day (1 = best)
+plot_cumulative_return(quantile_spread, return_type='log')  # starts at 0
+plot_quantile_cumulative(quantile_returns_df, return_type='log')  # starts at 0
+plot_drawdown(quantile_spread)
+plot_return_distribution(quantile_spread)
 ```
 
 ---
 
 ## Summary
 
-The `visualization` module enables intuitive and effective presentation of factor analysis results, supporting both research and reporting workflows in quantitative finance.
+The `visualization` module enables intuitive, reproducible presentation of factor analysis, supporting both research notebooks and reports.
