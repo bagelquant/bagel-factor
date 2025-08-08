@@ -51,5 +51,35 @@ class TestInformationCoefficient(unittest.TestCase):
         with self.assertRaises(ValueError):
             ic.information_coefficient(self.factor, self.returns, method='kendall')  # type: ignore
 
+class TestInformationCoefficientUsingRealData(unittest.TestCase):
+
+    def setUp(self):
+        self.factor = pd.read_csv(
+            'tests/test_data/roe.csv',
+            parse_dates=['date'],
+            index_col=['date', 'ticker']
+        )['roe'].sort_index()
+            
+        price = pd.read_csv(
+            'tests/test_data/price.csv',
+            usecols=['date', 'ticker', 'adj_close'],
+            parse_dates=['date'],
+            index_col=['date', 'ticker']
+        )['adj_close'].sort_index()
+        # Drop duplicate indices
+        price = price[~price.index.duplicated(keep='first')]
+        self.factor = self.factor[~self.factor.index.duplicated(keep='first')]
+
+        returns_20d = price.groupby(level='ticker').pct_change(20, fill_method=None)
+        self.future_returns = returns_20d.shift(-20).dropna()  # Future returns
+
+        # Align indices
+        self.factor = self.factor.reindex(self.future_returns.index)
+        self.factor = self.factor.groupby(level='ticker').ffill()
+
+
+    def test_ic_pearson_perfect(self):
+        ic_series = ic.information_coefficient(self.factor, self.future_returns, method='pearson')
+
 if __name__ == '__main__':
     unittest.main()
