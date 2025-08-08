@@ -41,6 +41,55 @@ fig = plots.plot_ic_series(evaluator.ic_series())
 fig.show()
 ```
 
+## Performance
+
+When working with large, multi-indexed datasets, you can keep the ergonomics of `FactorData` while minimizing overhead.
+
+- Fast, trusted construction
+  - Use when your data is already validated/sorted.
+
+```python
+from bagel_factor.data_handling import FactorData
+
+# Skip validation/sorting entirely (trusted input)
+fd_fast = FactorData.unsafe_from_series(series, name='my_factor')
+
+# Or construct with checks disabled
+fd_fast2 = FactorData(series, factor_name='my_factor', validate=False, enforce_sorted=False)
+```
+
+- Avoid unnecessary copies
+
+```python
+s_view = fd_fast.to_series(copy=False)
+df_view = fd_fast.to_frame(copy=False)
+payload = fd_fast.to_dict(copy=False)
+```
+
+- Evaluator alignment behavior
+  - If `factor_data.factor_data.index` already equals the returns index, the Evaluator skips reindex/ffill work.
+  - If your pipeline guarantees alignment, ensure indices match to get the fast path.
+
+```python
+# Ensure exact index match for a no-op alignment path
+factor = factor.reindex(future_returns.index).groupby(level='ticker').ffill()
+evaluator = Evaluator(
+    FactorData.unsafe_from_series(factor, name='factor'),
+    FactorData.unsafe_from_series(future_returns, name='ret_ic'),
+    FactorData.unsafe_from_series(future_returns, name='ret_q'),
+)
+```
+
+- Hot path: compute directly on Series
+  - All metric functions accept `pd.Series` and don’t require `FactorData`.
+
+```python
+from bagel_factor.metrics import information_coefficient, quantile_returns
+
+ic = information_coefficient(factor_series, future_returns)
+qret = quantile_returns(factor_series, future_returns, n_quantiles=10)
+```
+
 - Python 3.8+
 - pandas
 - numpy

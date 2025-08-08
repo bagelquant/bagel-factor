@@ -66,7 +66,7 @@ class Evaluator:
         Validate and align input data for evaluation.
         - Ensures all inputs are FactorData.
         - Ensures future_returns_for_ic and future_returns_for_quantile are aligned.
-        - Aligns factor_data to returns index, forward-filling per ticker.
+        - Aligns factor_data to returns index, forward-filling per ticker while avoiding unnecessary sorts.
         """
         if not isinstance(self.factor_data, FactorData):
             raise TypeError("factor_data must be an instance of FactorData")
@@ -76,19 +76,20 @@ class Evaluator:
             raise TypeError("future_returns_for_quantile must be an instance of FactorData")
         if not self.future_returns_for_ic.is_aligned(self.future_returns_for_quantile):
             raise ValueError("future_returns_for_ic and future_returns_for_quantile must be aligned")
-        # Forward fill per ticker after aligning to returns index
-        reindexed = self.factor_data.factor_data.reindex(self.future_returns_for_ic.factor_data.index)
-        reindexed = (
-            reindexed
-            .sort_index(level=['ticker', 'date'])
-            .groupby(level='ticker', group_keys=False)
-            .ffill()
-        )
-        reindexed = reindexed.reorder_levels(['date', 'ticker']).sort_index()
+        # Fast path: if factor data already perfectly aligned to returns index, skip work
+        target_index = self.future_returns_for_ic.factor_data.index
+        if self.factor_data.factor_data.index.equals(target_index):
+            return
+        # Align to returns index and forward fill within each ticker without expensive sorting
+        reindexed = self.factor_data.factor_data.reindex(target_index)
+        reindexed = reindexed.groupby(level='ticker', sort=False).ffill()
+        # Wrap without re-validating/sorting
         self.factor_data = FactorData(
             factor_data=reindexed,
             factor_name=self.factor_data.factor_name,
             metadata=self.factor_data.metadata,
+            validate=False,
+            enforce_sorted=False,
         )
     
     # === Setters ===
