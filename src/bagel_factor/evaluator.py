@@ -291,8 +291,8 @@ class Evaluator:
         """Cumulative return of quantile spread over evaluation period."""
         if not hasattr(self, "_quantile_spread_series"):
             self._calculate_quantile_spread_series()
-        return accumulate_return(
-            returns=self._quantile_spread_series.loc[self._start_date:self._end_date], 
+        return accumulate_return(  # type: ignore
+            returns=self._quantile_spread_series.loc[self._start_date:self._end_date],
             return_type=self.return_type
         )
 
@@ -300,7 +300,7 @@ class Evaluator:
         """Annualized volatility of quantile spread over evaluation period."""
         if not hasattr(self, "_quantile_spread_series"):
             self._calculate_quantile_spread_series()
-        return annualized_volatility(
+        return annualized_volatility(  # type: ignore
             self._quantile_spread_series.loc[self._start_date:self._end_date],
             periods_per_year=self.periods_per_year,
             return_type=self.return_type
@@ -310,7 +310,7 @@ class Evaluator:
         """Sharpe ratio of quantile spread over evaluation period."""
         if not hasattr(self, "_quantile_spread_series"):
             self._calculate_quantile_spread_series()
-        return sharpe_ratio(
+        return sharpe_ratio(  # type: ignore
             self._quantile_spread_series.loc[self._start_date:self._end_date],
             risk_free_rate=risk_free_rate,
             periods_per_year=self.periods_per_year,
@@ -321,7 +321,7 @@ class Evaluator:
         """Max drawdown of quantile spread cumulative return over evaluation period."""
         if not hasattr(self, "_quantile_spread_series"):
             self._calculate_quantile_spread_series()
-        return max_drawdown(
+        return max_drawdown(  # type: ignore
             accumulate_return(self._quantile_spread_series.loc[self._start_date:self._end_date]),
             return_type=self.return_type
         )
@@ -330,7 +330,7 @@ class Evaluator:
         """Calmar ratio of quantile spread cumulative return over evaluation period."""
         if not hasattr(self, "_quantile_spread_series"):
             self._calculate_quantile_spread_series()
-        return calmar_ratio(
+        return calmar_ratio(  # type: ignore
             accumulate_return(self._quantile_spread_series.loc[self._start_date:self._end_date]),
             periods_per_year=self.periods_per_year,
             return_type=self.return_type
@@ -340,7 +340,7 @@ class Evaluator:
         """Downside risk of quantile spread over evaluation period."""
         if not hasattr(self, "_quantile_spread_series"):
             self._calculate_quantile_spread_series()
-        return downside_risk(
+        return downside_risk(  # type: ignore
             self._quantile_spread_series.loc[self._start_date:self._end_date],
             risk_free_rate=risk_free_rate,
             periods_per_year=self.periods_per_year,
@@ -351,7 +351,7 @@ class Evaluator:
         """Sortino ratio of quantile spread over evaluation period."""
         if not hasattr(self, "_quantile_spread_series"):
             self._calculate_quantile_spread_series()
-        return sortino_ratio(
+        return sortino_ratio(  # type: ignore
             self._quantile_spread_series.loc[self._start_date:self._end_date],
             risk_free_rate=risk_free_rate,
             periods_per_year=self.periods_per_year,

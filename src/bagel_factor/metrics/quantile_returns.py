@@ -1,13 +1,13 @@
 
 import pandas as pd
 import numpy as np
-from typing import Optional, Union, List
+from typing import Optional, List
 
 def quantile_returns(
     factor: pd.Series,
     future_returns: pd.Series,
     n_quantiles: int = 10,
-    quantile_labels: Optional[List[Union[int, str]]] = None,
+    quantile_labels: Optional[List[int | str]] = None,
     min_ratio: float = 0.5
 ) -> pd.DataFrame:
     """
@@ -97,8 +97,8 @@ def quantile_returns(
 
 def quantile_spread(
     quantile_returns_df: pd.DataFrame,
-    upper: Optional[Union[int, str]] = None,
-    lower: Optional[Union[int, str]] = None
+    upper: Optional[int | str] = None,
+    lower: Optional[int | str] = None
 ) -> pd.Series:
     """
     Compute the spread between upper and lower quantile returns for each date.
