@@ -32,7 +32,7 @@ def accumulate_return(
         Cumulative return series.
     """
     if return_type == 'log':
-        return returns.cumsum().apply(np.exp)
+        return pd.Series(np.exp(returns.cumsum().to_numpy()), index=returns.index, name=returns.name)
     else:
         return (1 + returns).cumprod()
 
