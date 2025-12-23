@@ -1,5 +1,10 @@
-"""
-This module contains various data loader classes for different data formats.
+"""bagelface.data.loaders
+Lightweight data loaders for common formats.
+
+v0 proposal:
+- LoadConfig dataclass to specify loading options.
+- DataLoader protocol with concrete implementations for CSV, JSON, Excel, Parquet, and Pick
+
 """
 
 from __future__ import annotations

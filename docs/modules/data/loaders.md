@@ -1,6 +1,13 @@
 # `bagelfactor.data.loaders`
 
-Data ingestion utilities built around **pandas**. The module provides a small `LoadConfig` dataclass, format inference, a loader registry, and a single convenience entrypoint `load_df()`.
+Data ingestion utilities built around **pandas** readers.
+
+The module is intentionally small:
+
+- a `LoadConfig` dataclass defines what to load and optional behaviors
+- `_infer_format()` infers format from file suffix
+- `get_loader()` returns a concrete loader
+- `load_df()` is the canonical entrypoint
 
 ## Supported formats
 
@@ -10,9 +17,7 @@ Data ingestion utilities built around **pandas**. The module provides a small `L
 - Parquet: `pd.read_parquet`
 - Pickle: `pd.read_pickle`
 
-## Public API
-
-### `LoadConfig`
+## `LoadConfig`
 
 ```python
 from bagelfactor.data.loaders import LoadConfig
@@ -27,19 +32,25 @@ cfg = LoadConfig(
 )
 ```
 
-Notes:
-- `columns`/`nrows` are applied where supported.
-- For **parquet**, `nrows` is implemented via `df.head(nrows)` after reading.
-- `postprocess` runs after loading (and after any `nrows` truncation).
+### Behavior and precedence
 
-### `load_df(config: LoadConfig) -> pd.DataFrame`
+- `read_kwargs` is passed through to the underlying pandas function.
+- If `columns` / `nrows` are provided and *not already present* in `read_kwargs`, they are injected.
+- For **parquet**, pandas does not support `nrows`, so `nrows` is applied after reading via `df.head(nrows)`.
+- `postprocess(df)` runs after loading (and after any row limiting).
+
+## `load_df(config) -> pd.DataFrame`
 
 Canonical entrypoint.
+
+Expected output:
+
+- a `pd.DataFrame` as returned by pandas
+- optionally transformed by `postprocess`
 
 ```python
 from bagelfactor.data.loaders import LoadConfig, load_df
 
-# Load a CSV and apply a transformation
 cfg = LoadConfig(
     source="data/prices.csv",
     nrows=100,
@@ -49,31 +60,7 @@ cfg = LoadConfig(
 df = load_df(cfg)
 ```
 
-### `get_loader(config: LoadConfig) -> DataLoader`
+## Common pitfalls
 
-Returns the concrete loader instance based on `config.format` or inferred format.
-
-```python
-from bagelfactor.data.loaders import LoadConfig, get_loader
-
-loader = get_loader(LoadConfig(source="data/features.parquet"))
-df = loader.load()
-```
-
-## Format inference
-
-`_infer_format(source)` infers based on `Path(source).suffix`:
-
-- `.csv` → `csv`
-- `.json` → `json`
-- `.xlsx`/`.xls` → `xlsx`
-- `.parquet` → `parquet`
-- `.pkl`/`.pickle` → `pickle`
-
-If the suffix is unknown, `UnsupportedFormatError` is raised.
-
-## Dependencies and caveats
-
-- Parquet support typically requires an engine such as **pyarrow** or **fastparquet** installed; pandas will raise at runtime if no engine is available.
-- Excel support may require `openpyxl` (for `.xlsx`) depending on your environment.
-
+- Parquet requires a parquet engine (`pyarrow` or `fastparquet`).
+- Excel may require `openpyxl`.
