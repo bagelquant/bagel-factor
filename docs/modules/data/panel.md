@@ -7,7 +7,7 @@ A **panel** is the canonical internal representation:
 - type: `pd.DataFrame`
 - index: `pd.MultiIndex` with names `("date", "asset")`
 
-This standardization is what makes cross-sectional transforms, factor evaluation, and backtests composable.
+This standardization is what makes cross-sectional transforms and factor evaluation composable.
 
 ## `ensure_panel_index(df, ..., source="columns") -> pd.DataFrame`
 

@@ -1,42 +1,37 @@
-# bagel-factor v0 Proposal (Factor Research + Modeling + Backtesting)
+# bagel-factor v0 Proposal (Single-Factor Evaluation + Testing)
 
 **Date:** 2025-12-19  
-**Scope:** v0 architecture and interfaces for a comprehensive factor model research and backtesting package.
+**Scope:** v0 architecture and interfaces for a **single-factor evaluation/testing** package.
 
 ## 1. Executive summary
 
-`bagel-factor` is a Python package for **daily equity** research (v0 default; extensible to multi-asset) that supports three **independent** user workflows:
+`bagel-factor` is a Python package for **daily equity** factor research (v0 default; extensible to multi-asset) focused on one workflow:
 
-1. **Single Factor Testing**: IC/ICIR, decay, quantile returns, turnover, and robustness checks.
-2. **Multi-Factor Models**: a unified interface to combine factors using regression, ML, and neural networks; walk-forward evaluation.
-3. **Any Strategy Backtesting**: a general portfolio backtesting engine that can backtest *any* strategy producing target positions/weights.
+- **Single Factor Testing**: IC/RankIC, ICIR, decay, quantile returns, turnover, coverage, and robustness checks.
 
-All three workflows share a common point-in-time data model, preprocessing pipeline, metrics layer, and reporting/export utilities.
+This package intentionally does **not** implement portfolio backtesting or multi-factor/model evaluation; those will live in a separate package.
 
 ## 2. Goals (v0)
 
 ### 2.1 Functional goals
 
 - **Correct, point-in-time workflow**: avoid lookahead via explicit lagging rules and alignment.
-- **Reproducible research**: deterministic splits, configuration capture, and artifact export.
+- **Reproducible research**: deterministic configuration, stable inputs/outputs, and artifact export.
 - **Composable preprocessing**: winsorize/clip, zscore/rank, missing handling, neutralization.
-- **Standard single-factor diagnostics**: IC/RankIC, ICIR, IC decay curves, quantile portfolios, turnover.
-- **Unified multi-factor modeling interface** with interchangeable backends.
-- **General backtest engine**: weights → trades → PnL with user-defined costs, slippage, and tradability rules.
+- **Standard single-factor diagnostics**: IC/RankIC, ICIR, IC decay curves, quantile portfolios, turnover, coverage.
 
-### 2.2 Non-goals (initially)
+### 2.2 Non-goals (v0)
 
+- **Backtesting / portfolio simulation** (weights → trades → PnL).
+- **Multi-factor modeling** (combining factors via regression/ML/NN, walk-forward evaluation).
 - Broker connectivity / OMS, real-time execution, tick-level simulation.
-- A complete risk-model suite (basic exposures supported; full Barra-like models can be layered later).
 
 ## 3. Design principles
 
-- **Three jobs, independently runnable**: no workflow should require the others.
-- **Shared primitives**: each job consumes/produces the same canonical objects.
-- **Separation of concerns**:
-  - research diagnostics ≠ portfolio simulation,
-  - model training/evaluation ≠ execution assumptions.
-- **Plugin-first**: models, cost models, and strategies are pluggable.
+- **One job, done well**: the public API centers on single-factor evaluation.
+- **Shared primitives**: all evaluation consumes/produces the same canonical objects.
+- **Explicit point-in-time**: if a transformation could introduce lookahead, it should be explicit (e.g., lagging, calendar alignment).
+- **Composable utilities**: pandas-first helpers that remain easy to integrate with other packages.
 
 ## 4. Canonical data model
 
@@ -53,13 +48,13 @@ Internal canonical representation is a panel indexed by `(date, asset)`.
 
 - Pricing/returns: `close`, `open`, `vwap`, `ret_1d`, and computed `ret_fwd_{h}` labels
 - Liquidity/capacity: `volume`, `adv_{n}`, `mkt_cap`
-- Flags: `tradable`, `in_universe`, `halted`, `stale`
-- Group labels: `sector`, `industry` (optional but strongly recommended)
+- Flags: `in_universe`, `halted`, `stale` (optional)
+- Group labels: `sector`, `industry` (optional but useful for grouped stats)
 
 ### 4.2 Factors
 
 - `FactorSeries`: one score per `(date, asset)` plus metadata (name, lookback, required fields, etc.).
-- `FactorMatrix`: multiple factors aligned to `(date, asset)`.
+- `FactorMatrix`: multiple factor columns aligned to `(date, asset)` (useful for batch single-factor testing).
 
 ### 4.3 Universe
 
@@ -70,35 +65,17 @@ Internal canonical representation is a panel indexed by `(date, asset)`.
 Proposed high-level layout:
 
 ```
-bagel_factor/
+bagelfactor/
   data/              # loaders, calendars, universe, point-in-time alignment
-  preprocess/        # transforms, pipelines, neutralization, lag rules
-  metrics/           # IC, quantiles, performance stats, risk metrics
-  reporting/         # optional plots/exports
-
-  single_factor/     # Job 1
-    job.py
-
-  models/            # model implementations + validation utilities
-    base.py
-    linear.py
-    validation.py
-  multi_factor/      # Job 2
-    job.py
-
-  strategy/          # strategy interface + examples
-    base.py
-  backtest/          # Job 3
-    job.py
-    engine.py
-    execution.py
-    costs.py
-    result.py
+  preprocess/        # transforms + pipelines
+  metrics/           # single-factor metrics (IC, quantiles, turnover, coverage)
+  reporting/         # exports (csv/parquet)
+  single_factor/     # single-factor evaluation job + result object
 ```
 
-## 6. Workflow definitions (the 3 jobs)
+## 6. Workflow definition
 
-### 6.1 Job 1 — Single Factor Testing
+### Single Factor Testing
 
 **Purpose:** evaluate a factor signal without requiring any model training or portfolio simulation.
 
@@ -129,84 +106,6 @@ SingleFactorJob.run(
 ) -> SingleFactorResult
 ```
 
-### 6.2 Job 2 — Multi-Factor Models
-
-**Purpose:** combine multiple factors using a unified `AlphaModel` interface (regression/ML/NN), with walk-forward evaluation.
-
-**Key requirement:** one interface, many backends.
-
-**Unified interface**
-```python
-class AlphaModel:
-    def fit(self, X, y, sample_weight=None, groups=None):
-        ...
-    def predict(self, X):
-        ...
-    def diagnostics(self) -> dict:
-        ...
-```
-
-**Training/evaluation protocol**
-
-- Walk-forward (rolling or expanding) splits.
-- Optional purged/embargo CV for leakage control.
-- Labels typically `ret_fwd_h` (or residual returns).
-
-**Outputs**
-
-- `alpha_pred[(date, asset)]`
-- prediction IC/RankIC time series
-- stability diagnostics (coef drift / feature importance)
-
-**Proposed API**
-
-```python
-MultiFactorJob.train_predict(
-    panel,
-    X_factors,
-    y_label,
-    model: AlphaModel,
-    split,
-    universe=None,
-    preprocess=None,
-) -> MultiFactorResult
-```
-
-### 6.3 Job 3 — Any Strategy Backtesting
-
-**Purpose:** simulate performance of any strategy that produces target positions/weights. This is intentionally not limited to factor strategies.
-
-**Strategy interface**
-```python
-class Strategy:
-    def generate(self, panel, universe=None):
-        """Return target weights indexed by (date, asset)."""
-```
-
-**Backtest engine responsibilities**
-
-- User-defined rebalance schedule (daily data, but rebalance frequency is user-defined)
-- User-provided tradability rules/filters, position limits, leverage/gross/net constraints
-- User-provided transaction cost + slippage/impact models (package provides simple defaults)
-- Accounting: holdings, trades, PnL, exposures, turnover
-
-**Proposed API**
-
-```python
-BacktestJob.run(
-    panel,
-    target_weights,
-    execution=None,
-    costs=None,
-    rules=None,
-) -> BacktestResult
-```
-
-**BacktestResult** should minimally include
-
-- `equity_curve`, `returns`, `holdings`, `trades`, `costs`, `turnover`
-- exposure time series by group/sector (if metadata available)
-
 ## 7. Cross-cutting components
 
 ### 7.1 Preprocessing pipeline
@@ -229,8 +128,11 @@ pipeline = Pipeline([
 
 ### 7.2 Metrics
 
-- Single-factor: IC/RankIC, ICIR, decay, quantiles, turnover
-- Portfolio: CAGR, vol, Sharpe/Sortino, max drawdown, hit rate
+- IC/RankIC, ICIR
+- IC decay
+- Quantile returns / long-short returns
+- Turnover
+- Coverage / missingness diagnostics
 
 ### 7.3 Reporting/export
 
@@ -240,10 +142,8 @@ pipeline = Pipeline([
 ## 8. Implementation plan (v0 milestones)
 
 1. **Core data + preprocessing**: canonical panel utilities, pipelines, return labeling.
-2. **Job 1 (Single factor)**: IC/ICIR/decay/quantiles/turnover and a structured result object.
-3. **Job 3 (Backtest engine)**: weights→trades→PnL with basic costs and tradability rules.
-4. **Job 2 (Multi-factor)**: unified `AlphaModel`, linear baseline models, walk-forward evaluation.
-5. Expand: constraints/optimizers, richer cost models, optional ML/NN backends, richer attribution.
+2. **Single-factor evaluation**: IC/ICIR/decay/quantiles/turnover and a structured result object.
+3. **Reporting/export**: persist results + optional plotting hooks.
 
 ## 9. v0 defaults + remaining questions
 
@@ -251,7 +151,6 @@ pipeline = Pipeline([
 
 - **Asset class:** equities
 - **Data frequency:** daily
-- **Rebalance frequency:** user-defined (e.g., daily/weekly/monthly) while consuming daily data
-- **Tradability rules:** user input (engine consumes a user-provided rule/filter; package ships minimal defaults)
-- **Transaction costs/slippage:** user input (engine consumes a user-provided cost model; package ships minimal defaults)
+- **Evaluation horizons:** user-provided (e.g., 1D/5D/20D)
+- **Universe + group labels:** optional inputs for filtering and grouped stats
 

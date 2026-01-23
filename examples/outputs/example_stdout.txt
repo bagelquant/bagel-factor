@@ -1,0 +1,13 @@
+Wrote inputs to: examples/inputs
+Wrote outputs to: examples/outputs
+ICIR(h=1): 0.0
+IC(h=1):
+date
+2020-01-01   -1.0
+2020-01-02    1.0
+Name: ic, dtype: float64
+Quantile returns (h=1):
+                   1         2
+date                          
+2020-01-01  0.100000 -0.050000
+2020-01-02 -0.052632  0.090909

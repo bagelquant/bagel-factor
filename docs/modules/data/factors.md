@@ -38,7 +38,7 @@ Expected output:
 
 ## `FactorMatrix`
 
-A multi-factor container.
+A factor collection (multiple factor columns aligned to `(date, asset)`), useful for batch single-factor testing.
 
 ```python
 from bagelfactor.data import FactorMatrix

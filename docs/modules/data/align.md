@@ -30,7 +30,7 @@ Align a canonical `(date, asset)` panel to a `pd.DatetimeIndex` of session label
 - With `method="raw"`, any date gaps become explicit `NaN` rows.
 - With `method="ffill"`, missing dates carry forward the latest known value per asset.
 
-This makes downstream steps (labels, metrics, backtests) deterministic and calendar-aware.
+This makes downstream steps (labels, metrics, evaluation) deterministic and calendar-aware.
 
 ## `lag_by_asset(panel, columns, periods=1) -> pd.DataFrame`
 

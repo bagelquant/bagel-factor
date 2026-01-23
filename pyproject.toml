@@ -1,15 +1,37 @@
 [project]
 name = "bagel-factor"
 version = "0.1.0"
-description = "Add your description here"
+description = "Single-factor evaluation/testing toolkit (pandas-first)."
 readme = "README.md"
 requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name="Yanzhong Huang", email="eric.yanzhong.huang@gmail.com"}]
+keywords = ["quant", "factor", "alpha", "finance", "research"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: MIT License",
+]
+
 dependencies = [
     "exchange-calendars>=4.11.3",
     "pandas>=2.3.3",
 ]
 
+[project.urls]
+Homepage = "https://github.com/bagelquant/bagel-factor"
+Repository = "https://github.com/bagelquant/bagel-factor"
+
 [dependency-groups]
 dev = [
+    "build>=1.4.0",
     "pytest>=9.0.2",
+    "twine>=6.2.0",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.hatch.build]
+include = ["src/bagelfactor"]
