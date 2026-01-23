@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from bagelfactor.data import ensure_panel_index  # noqa: E402
 from bagelfactor.preprocess import Clip, Pipeline, Rank, ZScore  # noqa: E402
 from bagelfactor.single_factor import SingleFactorJob  # noqa: E402
+from bagelfactor.stats import ols_alpha_tstat, ttest_1samp  # noqa: E402
 from bagelfactor.visualization import (  # noqa: E402
     plot_ic_hist,
     plot_ic_time_series,
@@ -143,11 +144,16 @@ def main() -> None:
     print("Wrote inputs to: examples/inputs")
     print("Wrote outputs to: examples/outputs")
     print("Wrote plots to: examples/outputs/plots")
+    ic_test = ttest_1samp(res.ic[1], popmean=0.0)
+    ls_alpha = ols_alpha_tstat(res.long_short[1])
+
     print("ICIR(h=1):", res.icir[1])
     print("IC(h=1) head:")
     print(res.ic[1].head())
     print("Quantile returns (h=1) head:")
     print(res.quantile_returns[1].head())
+    print("t-test mean(IC)=0:", ic_test)
+    print("OLS alpha (long-short):", ls_alpha)
 
 
 if __name__ == "__main__":

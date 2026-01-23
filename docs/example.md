@@ -153,13 +153,28 @@ qret_20d = res.quantile_returns[20]
 - `res.long_short[h]`: per-date (top quantile − bottom quantile) returns
 - `res.coverage`: fraction of non-missing factor values per date
 
-### (Optional) Plotting
+### Plotting
 
 ```python
 from bagelfactor.visualization import plot_result_summary
 
 fig = plot_result_summary(res, horizon=1)
 fig.show()
+```
+
+### Statistical tests
+
+```python
+from bagelfactor.stats import ols_alpha_tstat, ttest_1samp
+
+# Test mean IC != 0
+ic_test = ttest_1samp(res.ic[1], popmean=0.0)
+
+# Test long-short "alpha" (intercept) != 0
+ls_alpha = ols_alpha_tstat(res.long_short[1])
+
+print(ic_test)
+print(ls_alpha)
 ```
 
 Example inspection:
@@ -197,6 +212,8 @@ date
 2020-01-03 -0.025014  0.012766
 2020-01-06 -0.006947  0.011946
 2020-01-07 -0.027620  0.008941
+t-test mean(IC)=0: TTestResult(statistic=130.45316301540447, pvalue=1.095904287931887e-111, df=98.0, mean=0.8688405505742967, n=99)
+OLS alpha (long-short): OLSResult(alpha=0.03181639145628422, tstat=44.14400786214629, pvalue=1.7544717371591789e-66, nobs=99, rsquared=0.0)
 ```
 
 ### Plots (`examples/outputs/plots/`)

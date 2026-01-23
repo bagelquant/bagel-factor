@@ -91,6 +91,18 @@ fig = plot_result_summary(res, horizon=5)
 fig.show()
 ```
 
+### 5) Statistical tests
+
+```python
+from bagelfactor.stats import ols_alpha_tstat, ttest_1samp
+
+ic_test = ttest_1samp(res.ic[5], popmean=0.0)
+ls_alpha = ols_alpha_tstat(res.long_short[5])
+
+print(ic_test)
+print(ls_alpha)
+```
+
 Full example with expected outputs: see [`docs/example.md`](./docs/example.md).
 
 ## Documentation
