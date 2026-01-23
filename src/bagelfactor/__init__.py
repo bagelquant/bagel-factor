@@ -10,3 +10,4 @@ from .metrics import *  # noqa: F403
 from .preprocess import *  # noqa: F403
 from .reporting import *  # noqa: F403
 from .single_factor import *  # noqa: F403
+from .visualization import *  # noqa: F403

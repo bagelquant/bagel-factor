@@ -82,27 +82,23 @@ qret_5d = res.quantile_returns[5]
 long_short_20d = res.long_short[20]
 ```
 
+### 4) Visualize results
+
+```python
+from bagelfactor.visualization import plot_result_summary
+
+fig = plot_result_summary(res, horizon=5)
+fig.show()
+```
+
+Full example with expected outputs: see [`docs/example.md`](./docs/example.md).
+
 ## Documentation
 
 - Getting started with a complete, reproducible example (inputs + expected outputs):
   - [`docs/example.md`](./docs/example.md)
 - Module docs:
   - [`docs/modules/`](./docs/modules/)
-
-## Reproducible example artifacts
-
-`examples/example.py` is a script that generates deterministic artifacts used by `docs/example.md`:
-
-- inputs: `examples/inputs/`
-- outputs: `examples/outputs/`
-
-## Development
-
-Run tests:
-
-```bash
-uv run pytest -q
-```
 
 ## License
 

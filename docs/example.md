@@ -34,16 +34,19 @@ Typical columns include:
 
 ### Example input
 
-The example input (saved as `examples/inputs/panel.csv`) is:
+The example input (saved as `examples/inputs/panel.csv`) is a deterministic synthetic dataset with:
 
-| date       | asset | close | alpha |
-| ---------- | ----- | ----- | ----- |
-| 2020-01-01 | A     | 10.0  | 1.0   |
-| 2020-01-01 | B     | 20.0  | 2.0   |
-| 2020-01-02 | A     | 11.0  | 1.5   |
-| 2020-01-02 | B     | 19.0  | 0.5   |
-| 2020-01-03 | A     | 12.0  | 1.2   |
-| 2020-01-03 | B     | 18.0  | 0.2   |
+- **100 dates** (business days)
+- **20 assets** (`A00`..`A19`)
+
+The file is too large to inline here; below is the *first few rows*:
+
+| date       | asset | close             | alpha               |
+| ---------- | ----- | ----------------- | ------------------- |
+| 2020-01-01 | A00   | 104.4535218971883 | 0.9417154046806644  |
+| 2020-01-01 | A01   | 103.4787772728434 | -2.1106967367366654 |
+| 2020-01-01 | A02   | 105.1528305879436 | 1.5047913144086922  |
+| ...        | ...   | ...               | ...                 |
 
 ### `ensure_panel_index(df) -> panel`
 
@@ -150,6 +153,15 @@ qret_20d = res.quantile_returns[20]
 - `res.long_short[h]`: per-date (top quantile − bottom quantile) returns
 - `res.coverage`: fraction of non-missing factor values per date
 
+### (Optional) Plotting
+
+```python
+from bagelfactor.visualization import plot_result_summary
+
+fig = plot_result_summary(res, horizon=1)
+fig.show()
+```
+
 Example inspection:
 
 ```python
@@ -167,18 +179,47 @@ print(res.quantile_returns[1])
 ```text
 Wrote inputs to: examples/inputs
 Wrote outputs to: examples/outputs
-ICIR(h=1): 0.0
-IC(h=1):
+Wrote plots to: examples/outputs/plots
+ICIR(h=1): 13.177759456489515
+IC(h=1) head:
 date
-2020-01-01   -1.0
-2020-01-02    1.0
+2020-01-01    0.894737
+2020-01-02    0.882353
+2020-01-03    0.870677
+2020-01-06    0.871930
+2020-01-07    0.932331
 Name: ic, dtype: float64
-Quantile returns (h=1):
+Quantile returns (h=1) head:
                    1         2
 date                          
-2020-01-01  0.100000 -0.050000
-2020-01-02 -0.052632  0.090909
+2020-01-01 -0.017687  0.014291
+2020-01-02 -0.010992  0.026074
+2020-01-03 -0.025014  0.012766
+2020-01-06 -0.006947  0.011946
+2020-01-07 -0.027620  0.008941
 ```
+
+### Plots (`examples/outputs/plots/`)
+
+#### Summary
+
+![](../examples/outputs/plots/summary_h1.png)
+
+#### IC
+
+![](../examples/outputs/plots/ic_time_series_h1.png)
+
+![](../examples/outputs/plots/ic_hist_h1.png)
+
+#### Quantile returns
+
+![](../examples/outputs/plots/quantile_returns_time_series_h1.png)
+
+![](../examples/outputs/plots/quantile_returns_heatmap_h1.png)
+
+#### Long-short
+
+![](../examples/outputs/plots/long_short_h1.png)
 
 ### `examples/outputs/ic_h1.csv`
 
