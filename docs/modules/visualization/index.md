@@ -4,11 +4,7 @@ Matplotlib-based visualization helpers for single-factor evaluation outputs.
 
 ## Install
 
-This module is optional and requires `matplotlib`:
-
-```bash
-pip install "bagel-factor[visualization]"
-```
+This module requires `matplotlib`.
 
 ## Public API
 
@@ -36,3 +32,7 @@ res = SingleFactorJob.run(panel, factor="alpha", horizons=(1, 5, 20), n_quantile
 fig = plot_result_summary(res, horizon=5)
 fig.show()
 ```
+
+## Detailed docs
+
+- [`single_factor`](./single_factor.md)

@@ -8,6 +8,11 @@ Common statistical tests and regressions.
 from bagelfactor.stats import ttest_1samp, ttest_ind, ols_alpha_tstat, ols_summary
 ```
 
+## Detailed docs
+
+- [`tests`](./tests.md)
+- [`regression`](./regression.md)
+
 ## Examples
 
 ### Test if IC mean is different from 0

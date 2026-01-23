@@ -6,6 +6,7 @@ The module is intentionally small:
 
 - a `LoadConfig` dataclass defines what to load and optional behaviors
 - `_infer_format()` infers format from file suffix
+- `_add_optional_common_behavior()` injects `columns`/`nrows` into reader kwargs when applicable
 - `get_loader()` returns a concrete loader
 - `load_df()` is the canonical entrypoint
 
@@ -59,6 +60,10 @@ cfg = LoadConfig(
 
 df = load_df(cfg)
 ```
+
+## Internal docs
+
+- [`loaders_internal`](./loaders_internal.md)
 
 ## Common pitfalls
 

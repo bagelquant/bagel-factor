@@ -1,4 +1,4 @@
-"""bagelface.data.loaders
+"""bagelfactor.data.loaders
 Lightweight data loaders for common formats.
 
 v0 proposal:

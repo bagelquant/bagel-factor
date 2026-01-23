@@ -7,3 +7,7 @@ Small helpers for exporting results.
 ```python
 from bagelfactor.reporting import to_csv, to_parquet
 ```
+
+## Detailed docs
+
+- [`export`](./export.md)
