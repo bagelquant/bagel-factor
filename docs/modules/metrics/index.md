@@ -15,6 +15,13 @@ from bagelfactor.metrics import (
 )
 ```
 
+## Detailed docs
+
+- [`ic`](./ic.md)
+- [`quantiles`](./quantiles.md)
+- [`turnover`](./turnover.md)
+- [`coverage`](./coverage.md)
+
 ## What’s included (v0)
 - IC / RankIC time series per horizon
 - ICIR summary

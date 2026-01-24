@@ -14,6 +14,11 @@ from bagelfactor.preprocess import (
 )
 ```
 
+## Detailed docs
+
+- [`pipeline`](./pipeline.md)
+- [`transforms`](./transforms.md)
+
 ## Notes
 - All transforms operate on canonical panels indexed by `(date, asset)`.
 - Transforms are applied **cross-sectionally** per `date` when applicable.

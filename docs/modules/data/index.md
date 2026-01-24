@@ -36,4 +36,4 @@ from bagelfactor.data import (
 - [`align`](./align.md): aligns a panel to a calendar and provides lagging utilities
 - [`factors`](./factors.md): small typed wrappers for factor series/matrices
 - [`universe`](./universe.md): stores membership mask and filters panels
-- [`calendar`](./calendar.md): builds + caches valid sessions and schedules for markets
+- [`calendar`](./calendar.md): builds + caches valid sessions and schedules for markets (US/CN)

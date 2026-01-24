@@ -20,3 +20,8 @@ res = SingleFactorJob.run(panel, factor="alpha", horizons=(1, 5, 20))
 ic_1d = res.ic[1]
 qret_5d = res.quantile_returns[5]
 ```
+
+## Detailed docs
+
+- [`job`](./job.md)
+- [`result`](./result.md)
