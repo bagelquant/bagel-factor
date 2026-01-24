@@ -61,9 +61,12 @@ Line plot of long-short series.
 
 ## Turnover plots
 
-### `plot_turnover_time_series(turnover, *, ax=None, title=None, grid=True)`
+### `plot_turnover_time_series(turnover, *, ax=None, title=None, grid=True, quantiles=None, average=False)`
 
-Plots average turnover across quantiles through time.
+Plots turnover through time, optionally filtered to a subset of quantiles and/or aggregated according to `average`.
+
+- `quantiles`: Optional iterable of quantile numbers to plot (e.g., `[1, 5]`). If `None`, plots all quantiles.
+- `average`: If `True`, plots the average turnover across quantiles instead of individual lines.
 
 ### `plot_turnover_heatmap(turnover, *, ax=None, title=None, cmap="viridis")`
 
@@ -77,13 +80,17 @@ Line plot of per-date coverage.
 
 ## Summary
 
-### `plot_result_summary(result, *, horizon=1, figsize=(12,10)) -> Figure`
+### `plot_result_summary(result, *, horizon=None, figsize=(12,10)) -> Figure`
 
 Create a multi-panel figure summarizing:
-- IC time series + histogram
-- quantile returns time series + heatmap
-- long-short time series
-- turnover heatmap
-- coverage time series
+- IC time series (top-left)
+- IC histogram (top-right)
+- quantile returns time series (middle-left)
+- quantile returns heatmap (middle-right)
+- long-short time series (bottom-left)
+- coverage time series (bottom-right)
+
+- `horizon`: The horizon to plot. If `None`, uses the first available horizon from the result.
+- `figsize`: Figure size as a tuple `(width, height)`.
 
 This is intended as the quickest way to visualize a `SingleFactorResult`.
