@@ -23,7 +23,22 @@ Normalizes input into canonical panel form.
 - If `source="columns"`:
   - convert `date` column using `pd.to_datetime`
   - set the index to `[date, asset]`
+  - ensure index names are exactly `("date", "asset")` (will rename if necessary)
 - If `sort=True` (default), sorts the index.
+
+### Example
+```python
+from bagelfactor.data import ensure_panel_index
+
+raw = pd.DataFrame({
+    'date': ['2020-01-01', '2020-01-01'],
+    'asset': ['A', 'B'],
+    'close': [10.0, 11.0],
+    'alpha': [0.1, 0.2],
+})
+panel = ensure_panel_index(raw)
+assert panel.index.names == ['date','asset']
+```
 
 ### Expected output
 
@@ -31,6 +46,7 @@ A new DataFrame with:
 
 - `panel.index` is a MultiIndex
 - index names exactly `("date", "asset")`
+- columns preserved and ready for downstream transforms
 
 ## `validate_panel(panel) -> None`
 

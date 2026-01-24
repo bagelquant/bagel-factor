@@ -32,6 +32,17 @@ Line plot of the IC series.
 - If `rolling` is set (>=2), overlays a rolling mean.
 - Sets a 0.0 horizontal reference line by default.
 
+Example
+```python
+from bagelfactor.visualization import plot_ic_time_series
+plot_ic_time_series(ic_series, rolling=21, title='IC (21d rolling)')
+```
+
+Practical tips
+
+- For noisy IC series, use a rolling window of at least 21 days to reveal persistent signals.
+- Always show a histogram alongside the time series to understand distributional skewness and outliers (`plot_ic_hist`).
+
 ### `plot_ic_hist(ic, *, ax=None, bins=40, title=None, grid=True, show_mean=True, show_zero=True)`
 
 Histogram of IC values.

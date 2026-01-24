@@ -107,6 +107,13 @@ print(ls_alpha)
 
 Full example with expected outputs: see [`docs/example.md`](./docs/example.md).
 
+## Benchmarks
+
+- IC (information coefficient): vectorized implementation yields ~4-5x speedup on synthetic panels (examples/benchmark_ic.py) with numeric agreement to baseline.
+- Coverage: vectorized implementation yields ~20-30x speedup; results are numerically identical to the baseline implementation.
+
+Reproduce: `uv run python examples/benchmark_ic.py` (benchmarks included in repository).
+
 ## Documentation
 
 ### Table of contents
