@@ -13,6 +13,8 @@ It intentionally does **not** implement multi-factor modeling or portfolio backt
 
 ## Install
 
+Requires Python >=3.12
+
 ```bash
 pip install bagel-factor
 ```

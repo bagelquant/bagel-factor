@@ -23,6 +23,8 @@ A lightweight object holding the mask (and labels).
 
 ## `Universe.apply(panel) -> pd.DataFrame`
 
+Note: Universe masks are reindexed to match the panel and missing entries are treated as False to avoid unintentionally dropping rows.
+
 Filters a panel down to rows where `mask == True`.
 
 ### Logic

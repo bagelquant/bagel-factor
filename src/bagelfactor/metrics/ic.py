@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
+import numpy as np
 
 from bagelfactor.data.panel import validate_panel
 
@@ -30,17 +31,48 @@ def ic_series(
 
     df = panel[[factor, label]].dropna()
 
-    def _ic(g: pd.DataFrame) -> float:
-        if len(g) < 2:
-            return float("nan")
-        x = g[factor]
-        y = g[label]
-        if method == "spearman":
-            x = x.rank(method="average")
-            y = y.rank(method="average")
-        return float(x.corr(y, method="pearson"))
+    # Vectorized per-date correlation using group aggregations for performance
+    if df.empty:
+        return pd.Series(dtype=float, name="ic")
 
-    return df.groupby(level="date", sort=False).apply(_ic).rename("ic")
+    if method == "spearman":
+        x = df.groupby(level="date")[factor].rank(method="average")
+        y = df.groupby(level="date")[label].rank(method="average")
+    else:
+        x = df[factor]
+        y = df[label]
+
+    w = pd.DataFrame({"x": x, "y": y}, index=df.index)
+    w["xy"] = w["x"] * w["y"]
+    w["x2"] = w["x"] * w["x"]
+    w["y2"] = w["y"] * w["y"]
+
+    g = (
+        w.groupby(level="date", sort=False)
+        .agg(
+            n=("x", "size"),
+            sum_x=("x", "sum"),
+            sum_y=("y", "sum"),
+            sum_xy=("xy", "sum"),
+            sum_x2=("x2", "sum"),
+            sum_y2=("y2", "sum"),
+        )
+    )
+
+    n = g["n"].astype(float)
+    mean_x = g["sum_x"] / n
+    mean_y = g["sum_y"] / n
+    cov = g["sum_xy"] / n - mean_x * mean_y
+    var_x = g["sum_x2"] / n - mean_x * mean_x
+    var_y = g["sum_y2"] / n - mean_y * mean_y
+
+    denom = np.sqrt((var_x * var_y).clip(lower=0))
+
+    corr = cov / denom
+    mask = (n < 2) | (denom == 0) | (denom.isna())
+    corr[mask] = float("nan")
+
+    return corr.rename("ic")
 
 
 def icir(ic: pd.Series) -> float:
