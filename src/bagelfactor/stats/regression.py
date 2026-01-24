@@ -27,8 +27,8 @@ def ols_alpha_tstat(y, x=None, *, add_const: bool = True) -> OLSResult:
         X = pd.DataFrame(index=yv.index)
     else:
         xv = pd.Series(x)
-        # If x has no proper index or length matches y, align by position
-        if not isinstance(xv.index, pd.Index) or len(xv) == len(yv):
+        # If x has a default RangeIndex or length matches y, align by position
+        if isinstance(xv.index, pd.RangeIndex) or len(xv) == len(yv):
             xv = pd.Series(xv.values, index=yv.index)
         X = pd.DataFrame({"x": xv.reindex(yv.index)}).dropna()
         yv = yv.reindex(X.index)
@@ -57,8 +57,8 @@ def ols_summary(y, x=None, *, add_const: bool = True) -> str:
         X = pd.DataFrame(index=yv.index)
     else:
         xv = pd.Series(x)
-        # If x has no proper index or length matches y, align by position
-        if not isinstance(xv.index, pd.Index) or len(xv) == len(yv):
+        # If x has a default RangeIndex or length matches y, align by position
+        if isinstance(xv.index, pd.RangeIndex) or len(xv) == len(yv):
             xv = pd.Series(xv.values, index=yv.index)
         X = pd.DataFrame({"x": xv.reindex(yv.index)}).dropna()
         yv = yv.reindex(X.index)
