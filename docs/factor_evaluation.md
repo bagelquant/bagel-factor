@@ -141,6 +141,22 @@ In `bagel-factor`: `coverage_by_date(panel, column=factor)`.
 
 ### 4.2 Information Coefficient (IC) and RankIC
 
+Mathematical definition and practical notes
+
+Given per-date cross-sectional arrays f = (f_{i,t}) and r = (r^{(h)}_{i,t}) over assets i in U_t, the sample Pearson correlation for date t is:
+
+$$
+\text{IC}_t = \frac{\sum_i (f_{i,t}-\bar f_t)(r_{i,t}-\bar r_t)}{\sqrt{\sum_i (f_{i,t}-\bar f_t)^2}\ \sqrt{\sum_i (r_{i,t}-\bar r_t)^2}}
+$$
+
+Where $\bar f_t$ and $\bar r_t$ are cross-sectional means at date t. Spearman (RankIC) replaces f and r with their cross-sectional ranks before applying the same formula.
+
+Practical numeric tips
+
+- Use population variance (N) for standardization when aggregating across dates for ICIR to match this project's implementations.
+- When ranks contain many ties, consider adding small jitter or using different tie-breaking strategies; `bagel-factor` uses deterministic `method='average'`/`'first'` depending on context.
+
+
 **IC** is the cross-sectional correlation between the factor at date $t$ and the *forward* return label over horizon $h$:
 
 - factor: $f_{i,t}$

@@ -42,8 +42,21 @@ Compute **per-date** information coefficient between `panel[factor]` and `panel[
 
 ### Example
 ```python
+# compute rank IC for 5-day forward returns
 ic = ic_series(panel, factor="alpha", label="ret_fwd_5", method="spearman")
+
+# quick diagnostics
+print(ic.describe())           # mean, std, quartiles
+print(ic.mean(), ic.std(ddof=0))
+print("ICIR:", icir(ic))
+
+# plot with visualization helpers
+from bagelfactor.visualization import plot_ic_time_series
+plot_ic_time_series(ic, rolling=21)  # 21-day rolling mean
 ```
+
+### Implementation note
+- The vectorized implementation computes per-date moments (n, mean, variances, covariance) and derives Pearson correlation from these aggregated sums. This is numerically equivalent to per-group pandas.corr but avoids Python-level loops and scales much better for large panels.
 
 ## `icir(ic: pd.Series) -> float`
 

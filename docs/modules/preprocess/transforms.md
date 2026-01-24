@@ -26,6 +26,18 @@ Per-date cross-sectional z-score.
 - Uses population std (`ddof=0`).
 - If std is 0 or NaN for a date, returns `NA` for that date.
 
+### Example
+```python
+from bagelfactor.preprocess import ZScore
+panel_z = ZScore('alpha').transform(panel)
+# check per-date mean ~ 0 and std ~ 1 (where defined)
+print(panel_z.groupby(level='date')['alpha'].agg(['mean','std']).dropna().head())
+```
+
+### Notes
+- Z-scoring preserves relative distances but not monotonic ordering; if only order matters prefer `Rank`.
+- For heavy-tailed signals consider winsorizing (`Clip`) before z-scoring to reduce the influence of outliers.
+
 ## `Rank(column, pct=True, method="first")`
 
 Per-date cross-sectional ranking.

@@ -49,6 +49,15 @@ Compute mean label return per `(date, quantile)`.
 
 ### Example
 ```python
+# assign 5 quantiles and compute 20-day quantile returns
 q = assign_quantiles(panel, factor="alpha", n_quantiles=5)
 qr = quantile_returns(panel, quantile=q, label="ret_fwd_20")
+
+# quick checks
+print(q.groupby(level='date').value_counts().head())  # bucket sizes per date
+print(qr.mean())  # average return per quantile over time
 ```
+
+### Notes on bucket construction
+- Deterministic tie-breaking is used for reproducibility; when the factor has many identical values this may result in fewer realized buckets on that date.
+- For thin universes, prefer fewer quantiles (e.g., 3) to ensure stable bucket membership.

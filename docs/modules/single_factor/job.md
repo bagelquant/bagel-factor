@@ -40,6 +40,12 @@ A stateless runner that takes a canonical `(date, asset)` panel and produces a `
    - Long-short: `Q{n_quantiles} - Q1` if both exist
    - Turnover: `quantile_turnover(q, n_quantiles=n_quantiles)`
 
+Performance and correctness notes
+
+- Quantiles are assigned once before looping horizons to avoid redundant sorting/grouping; this is important for speed on large panels.
+- Forward returns are added per asset and are horizon-specific; ensure `price` column is clean and adjusted for corporate actions before running.
+- The implementation favors vectorized group operations to scale to large universes; prefer keeping the canonical panel dense (no unnecessary columns) to reduce memory overhead.
+
 #### Returns
 A `SingleFactorResult` with:
 - `ic[h]`: per-date IC series
