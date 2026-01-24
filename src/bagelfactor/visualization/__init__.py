@@ -2,7 +2,8 @@
 
 Matplotlib-based visualization helpers.
 
-This subpackage is intentionally optional: it requires `matplotlib`.
+This subpackage is intentionally optional and requires `matplotlib`.
+Install with: `pip install bagel-factor[visualization]`
 """
 
 from .single_factor import (

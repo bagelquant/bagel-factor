@@ -19,6 +19,7 @@ class TTestResult:
 def _as_1d(x) -> np.ndarray:
     if isinstance(x, pd.Series):
         arr = x.dropna().to_numpy(dtype=float)
+        arr = arr[np.isfinite(arr)]
     else:
         arr = np.asarray(x, dtype=float)
         arr = arr[np.isfinite(arr)]
