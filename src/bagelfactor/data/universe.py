@@ -22,7 +22,8 @@ class Universe:
     def __post_init__(self) -> None:
         if not isinstance(self.mask.index, pd.MultiIndex):
             raise TypeError("Universe.mask must be indexed by (date, asset)")
-        if self.mask.index.names != ["date", "asset"]:
+        if list(self.mask.index.names) != ["date", "asset"]:
+            # normalize index names to expected order; allow None entries
             object.__setattr__(
                 self,
                 "mask",

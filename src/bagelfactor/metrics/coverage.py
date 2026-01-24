@@ -13,7 +13,5 @@ def coverage_by_date(panel: pd.DataFrame, *, column: str) -> pd.Series:
         raise KeyError(f"Missing column: {column!r}")
 
     s = panel[column]
-    def _cov(x: pd.Series) -> float:
-        return float(x.notna().mean()) if len(x) else float("nan")
-
-    return s.groupby(level="date", sort=False).apply(_cov).rename("coverage")
+    # Vectorized: compute fraction of non-NA per date using groupby mean on boolean mask
+    return s.notna().groupby(level="date", sort=False).mean().astype(float).rename("coverage")
