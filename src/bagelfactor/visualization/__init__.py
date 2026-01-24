@@ -2,7 +2,7 @@
 
 Matplotlib-based visualization helpers.
 
-This subpackage is intentionally optional: it requires `matplotlib`.
+Note: `matplotlib` is included as a required dependency for this package.
 """
 
 from .single_factor import (
