@@ -103,7 +103,8 @@ def test_plot_result_summary_smoke() -> None:
     idx = pd.date_range("2020-01-01", periods=10, freq="D")
 
     MockResult = namedtuple(
-        "MockResult", ["factor", "horizons", "ic", "quantile_returns", "long_short", "coverage"]
+        "MockResult",
+        ["factor", "horizons", "ic", "quantile_returns", "long_short", "coverage", "turnover"],
     )
 
     result = MockResult(
@@ -147,6 +148,25 @@ def test_plot_result_summary_smoke() -> None:
         },
         coverage=pd.Series(
             [1.0, 0.9, 0.95, 0.8, 1.0, 0.95, 0.9, 0.85, 0.9, 0.95], index=idx, name="coverage"
+        ),
+        turnover=pd.Series(
+            data=[0.1, 0.15, 0.2, 0.1, 0.15, 0.2, 0.1, 0.12, 0.18, 0.2],
+            index=pd.MultiIndex.from_tuples(
+                [
+                    (idx[0], 1),
+                    (idx[0], 2),
+                    (idx[1], 1),
+                    (idx[1], 2),
+                    (idx[2], 1),
+                    (idx[2], 2),
+                    (idx[3], 1),
+                    (idx[3], 2),
+                    (idx[4], 1),
+                    (idx[4], 2),
+                ],
+                names=["date", "quantile"],
+            ),
+            name="turnover",
         ),
     )
 

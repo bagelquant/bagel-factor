@@ -131,7 +131,29 @@ def plot_quantile_returns_time_series(
     grid: bool = True,
     legend: bool = True,
 ):
-    """Plot quantile return time series (one line per quantile)."""
+    """Plot quantile return time series (one line per quantile).
+
+    Shows period-over-period returns for each quantile.
+    For cumulative returns, use plot_quantile_cumulative_returns().
+
+    Parameters
+    ----------
+    quantile_returns : pd.DataFrame
+        Quantile returns indexed by date, columns are quantile numbers
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot on
+    title : str, optional
+        Plot title
+    grid : bool, default True
+        Show grid
+    legend : bool, default True
+        Show legend
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axes object
+    """
 
     plt, _, Axes, _ = _require_mpl()
 
@@ -151,8 +173,81 @@ def plot_quantile_returns_time_series(
     for c in df.columns:
         ax.plot(df.index, df[c].values, lw=1.3, label=f"Q{c}")
 
-    ax.set_title(title or "Quantile returns")
+    ax.axhline(0.0, color="black", lw=0.8, linestyle="--", alpha=0.4)
+    ax.set_title(title or "Quantile returns (period)")
     ax.set_ylabel("return")
+    _format_datetime_xaxis(ax)
+    if grid:
+        ax.grid(True, alpha=0.3)
+    if legend:
+        ax.legend(loc="best", ncol=min(5, len(df.columns)))
+    return ax
+
+
+def plot_quantile_cumulative_returns(
+    quantile_returns: pd.DataFrame,
+    *,
+    ax=None,
+    title: str | None = None,
+    grid: bool = True,
+    legend: bool = True,
+    start_value: float = 1.0,
+):
+    """Plot cumulative returns for each quantile.
+
+    Computes cumulative product of (1 + return) to show wealth accumulation.
+    Useful for visualizing long-term performance differences between quantiles.
+
+    Parameters
+    ----------
+    quantile_returns : pd.DataFrame
+        Quantile returns indexed by date, columns are quantile numbers
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot on
+    title : str, optional
+        Plot title
+    grid : bool, default True
+        Show grid
+    legend : bool, default True
+        Show legend
+    start_value : float, default 1.0
+        Initial value for cumulative returns (e.g., 1.0 for 100% starting capital)
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axes object
+
+    Examples
+    --------
+    >>> res = SingleFactorJob.run(panel, factor='alpha', price='close')
+    >>> plot_quantile_cumulative_returns(res.quantile_returns[5])
+    """
+
+    plt, _, Axes, _ = _require_mpl()
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 5))
+
+    if not isinstance(ax, Axes):
+        raise TypeError("ax must be a matplotlib Axes")
+
+    df = quantile_returns.copy()
+    if len(df) == 0:
+        ax.set_title(title or "Quantile cumulative returns")
+        ax.grid(grid)
+        return ax
+
+    # Compute cumulative returns: (1 + r1) * (1 + r2) * ... * start_value
+    cumret = (1.0 + df).cumprod() * start_value
+
+    cumret.index = _to_dt_index(cumret.index)
+    for c in cumret.columns:
+        ax.plot(cumret.index, cumret[c].values, lw=2.0, label=f"Q{c}")
+
+    ax.axhline(start_value, color="black", lw=0.8, linestyle="--", alpha=0.4)
+    ax.set_title(title or "Quantile cumulative returns")
+    ax.set_ylabel(f"cumulative value (start={start_value})")
     _format_datetime_xaxis(ax)
     if grid:
         ax.grid(True, alpha=0.3)
@@ -372,9 +467,29 @@ def plot_result_summary(
     res,
     *,
     horizon: int | None = None,
-    figsize: tuple[float, float] = (12, 10),
+    figsize: tuple[float, float] = (14, 12),
+    cumulative: bool = True,
 ):
-    """Multi-panel summary figure for a `SingleFactorResult`."""
+    """Multi-panel summary figure for a `SingleFactorResult`.
+
+    Creates a 4×2 grid showing IC, quantile returns, long-short, and turnover.
+
+    Parameters
+    ----------
+    res : SingleFactorResult
+        Result object from SingleFactorJob.run()
+    horizon : int, optional
+        Which forward return horizon to plot. If None, uses first available.
+    figsize : tuple[float, float], default (14, 12)
+        Figure size in inches
+    cumulative : bool, default True
+        If True, show cumulative returns for quantiles. If False, show period returns.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object
+    """
 
     plt, _, _, Figure = _require_mpl()
 
@@ -383,20 +498,36 @@ def plot_result_summary(
         raise ValueError("No horizon available for plotting")
 
     fig: Figure
-    fig, axes = plt.subplots(3, 2, figsize=figsize, constrained_layout=True)
+    fig, axes = plt.subplots(4, 2, figsize=figsize, constrained_layout=True)
 
-    plot_ic_time_series(res.ic[h], ax=axes[0, 0], title=f"IC (h={h})")
-    plot_ic_hist(res.ic[h], ax=axes[0, 1], title=f"IC hist (h={h})")
+    # Row 0: IC analysis
+    plot_ic_time_series(res.ic[h], ax=axes[0, 0], title=f"IC time series (h={h})")
+    plot_ic_hist(res.ic[h], ax=axes[0, 1], title=f"IC distribution (h={h})")
 
-    plot_quantile_returns_time_series(
-        res.quantile_returns[h], ax=axes[1, 0], title=f"Quantile returns (h={h})"
-    )
+    # Row 1: Quantile returns
+    if cumulative:
+        plot_quantile_cumulative_returns(
+            res.quantile_returns[h], ax=axes[1, 0], title=f"Quantile cumulative returns (h={h})"
+        )
+    else:
+        plot_quantile_returns_time_series(
+            res.quantile_returns[h], ax=axes[1, 0], title=f"Quantile returns (h={h})"
+        )
     plot_quantile_returns_heatmap(
         res.quantile_returns[h], ax=axes[1, 1], title=f"Quantile returns heatmap (h={h})"
     )
 
-    plot_long_short_time_series(res.long_short[h], ax=axes[2, 0], title=f"Long-short (h={h})")
-    plot_coverage_time_series(res.coverage, ax=axes[2, 1], title="Coverage")
+    # Row 2: Long-short
+    plot_long_short_time_series(
+        res.long_short[h], ax=axes[2, 0], title=f"Long-short (h={h})", cumulative=False
+    )
+    plot_long_short_time_series(
+        res.long_short[h], ax=axes[2, 1], title=f"Long-short cumulative (h={h})", cumulative=True
+    )
 
-    fig.suptitle(f"SingleFactorResult summary: {res.factor}", y=1.02)
+    # Row 3: Turnover and coverage
+    plot_turnover_time_series(res.turnover, ax=axes[3, 0], title="Turnover (avg)", average=True)
+    plot_coverage_time_series(res.coverage, ax=axes[3, 1], title="Coverage")
+
+    fig.suptitle(f"SingleFactorResult summary: {res.factor}", fontsize=14, y=0.995)
     return fig
