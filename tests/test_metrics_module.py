@@ -39,7 +39,7 @@ def test_ic_series_spearman() -> None:
 
 def test_icir_basic() -> None:
     x = pd.Series([1.0, 2.0, 3.0])
-    assert icir(x) == pytest.approx(x.mean() / x.std(ddof=0))
+    assert icir(x) == pytest.approx(x.mean() / x.std(ddof=1))
 
 
 def test_assign_quantiles_and_quantile_returns() -> None:

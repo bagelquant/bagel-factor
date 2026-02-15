@@ -9,28 +9,27 @@ v0 proposal:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Optional,
-    Protocol,
-    Union,
     Literal,
+    Protocol,
 )
 
 import pandas as pd
 
-PATHLIKE = Union[str, Path]
+PATHLIKE = str | Path
 
 """
 === Custom Error Classes ===
 """
 
+
 class LoaderError(RuntimeError):
     """Custom error for loader issues."""
+
     ...
 
 
@@ -40,30 +39,26 @@ class UnsupportedFormatError(LoaderError):
     def __init__(self, format: str) -> None:
         super().__init__(f"Unsupported data format: {format}")
 
+
 """
 === Load Config Dataclass ===
 """
+
 
 @dataclass(frozen=True, slots=True)
 class LoadConfig:
     """Configuration for loading data."""
 
     source: PATHLIKE
-    format: Optional[Literal[
-        "csv", 
-        "json", 
-        "xlsx", 
-        "parquet",
-        "pickle"
-        ]] = None
+    format: Literal["csv", "json", "xlsx", "parquet", "pickle"] | None = None
 
     # Optional common behavior
-    columns: Optional[list[str]] = None
-    nrows: Optional[int] = None
-    postprocess: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None
+    columns: list[str] | None = None
+    nrows: int | None = None
+    postprocess: Callable[[pd.DataFrame], pd.DataFrame] | None = None
 
     # Pass-through kwargs
-    read_kwargs: Optional[Dict[str, Any]] = None
+    read_kwargs: dict[str, Any] | None = None
 
 
 def _infer_format(source: PATHLIKE) -> str:
@@ -82,13 +77,13 @@ def _infer_format(source: PATHLIKE) -> str:
     else:
         raise UnsupportedFormatError(suffix)
 
+
 """
 === Loader Protocol ===
 """
 
-def _add_optional_common_behavior(
-        config: LoadConfig
-        ) -> dict[str, Any]:
+
+def _add_optional_common_behavior(config: LoadConfig) -> dict[str, Any]:
     """Apply optional common behaviors like postprocessing."""
     read_kwargs = config.read_kwargs or {}
     if config.columns and "columns" not in read_kwargs:
@@ -184,7 +179,7 @@ class PickleLoader:
 === Loader Registry and Factory Function ===
 """
 
-LOADER_REGISTRY: Dict[str, Callable[[LoadConfig], DataLoader]] = {
+LOADER_REGISTRY: dict[str, Callable[[LoadConfig], DataLoader]] = {
     "csv": CSVLoader,
     "json": JSONLoader,
     "xlsx": ExcelLoader,
@@ -209,4 +204,3 @@ def load_df(config: LoadConfig) -> pd.DataFrame:
     if config.postprocess:
         df = config.postprocess(df)
     return df
-

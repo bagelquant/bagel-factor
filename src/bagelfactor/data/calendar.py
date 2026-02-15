@@ -14,7 +14,7 @@ Calendars are sourced from the optional third-party dependency `exchange-calenda
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Literal
 
@@ -27,9 +27,7 @@ class CalendarError(RuntimeError):
 
 class UnsupportedMarketError(CalendarError):
     def __init__(self, market: str) -> None:
-        super().__init__(
-            f"Unsupported market: {market!r}. Supported: 'US', 'CN', 'XNYS', 'XSHG'."
-        )
+        super().__init__(f"Unsupported market: {market!r}. Supported: 'US', 'CN', 'XNYS', 'XSHG'.")
 
 
 Market = Literal["US", "CN", "XNYS", "XSHG"]
@@ -59,7 +57,7 @@ def _calendar_path(market: Market) -> Path:
     return _calendar_dir() / f"{code.lower()}_sessions.csv"
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_exchange_calendar(market: Market):
     try:
         import exchange_calendars as xc

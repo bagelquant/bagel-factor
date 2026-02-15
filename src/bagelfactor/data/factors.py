@@ -50,7 +50,7 @@ class FactorMatrix:
     @classmethod
     def from_columns(
         cls, panel: pd.DataFrame, factors: list[str], *, meta: dict[str, Any] | None = None
-    ) -> "FactorMatrix":
+    ) -> FactorMatrix:
         """Build a FactorMatrix from factor columns already present in a panel."""
 
         p = ensure_panel_index(panel, source="index")

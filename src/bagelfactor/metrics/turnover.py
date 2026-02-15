@@ -12,7 +12,23 @@ def quantile_turnover(
 
     Turnover(q, t) = 1 - |members(q,t) ∩ members(q,t-1)| / |members(q,t) ∪ members(q,t-1)|
 
+    Note: If a quantile has zero members on both consecutive dates, no turnover
+    value is computed for that (date, quantile) pair. This results in a sparse
+    series where missing values indicate "not applicable" rather than "zero turnover".
+
     Returns a MultiIndex Series indexed by (date, quantile).
+
+    Parameters
+    ----------
+    quantile : pd.Series
+        Quantile assignments indexed by (date, asset)
+    n_quantiles : int
+        Total number of quantiles (used to iterate over all possible quantiles)
+
+    Returns
+    -------
+    pd.Series
+        Turnover values indexed by (date, quantile)
     """
 
     if not isinstance(quantile.index, pd.MultiIndex):

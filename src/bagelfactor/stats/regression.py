@@ -20,6 +20,25 @@ def ols_alpha_tstat(y, x=None, *, add_const: bool = True) -> OLSResult:
 
     - Mean test: y ~ 1 (x=None)
     - Alpha vs benchmark: y ~ 1 + x
+
+    Note on index alignment:
+    - If x has a RangeIndex or length matches y, uses position-based alignment
+    - Otherwise uses index-based alignment with reindexing
+    - This allows flexibility for common use cases (time series without explicit index)
+
+    Parameters
+    ----------
+    y : array-like or pd.Series
+        Dependent variable
+    x : array-like or pd.Series, optional
+        Independent variable (if None, performs mean test)
+    add_const : bool
+        Whether to add intercept term
+
+    Returns
+    -------
+    OLSResult
+        Regression results with alpha, t-stat, p-value, nobs, r-squared
     """
 
     yv = pd.Series(y).dropna().astype(float)

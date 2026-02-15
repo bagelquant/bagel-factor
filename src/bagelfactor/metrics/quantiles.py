@@ -13,7 +13,27 @@ def assign_quantiles(
 ) -> pd.Series:
     """Assign cross-sectional quantiles (1..n) per date based on factor ranks.
 
+    When duplicate factor values exist, fewer than n_quantiles bins may be created.
+    This is handled automatically by dropping duplicate bin edges.
+
+    Note: The long-short calculation in SingleFactorJob checks for the existence
+    of quantile 1 and quantile n before computing spreads.
+
     Returns a Series indexed by the same (date, asset) index as `panel`.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Canonical panel indexed by (date, asset)
+    factor : str
+        Column name to create quantiles from
+    n_quantiles : int
+        Desired number of quantiles (actual may be lower due to duplicates)
+
+    Returns
+    -------
+    pd.Series
+        Quantile assignments (1 to n_quantiles), with NA for missing factor values
     """
 
     validate_panel(panel)

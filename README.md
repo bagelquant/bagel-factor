@@ -1,5 +1,10 @@
 # bagel-factor
 
+[![CI](https://github.com/bagelquant/bagel-factor/workflows/CI/badge.svg)](https://github.com/bagelquant/bagel-factor/actions)
+[![PyPI](https://img.shields.io/pypi/v/bagel-factor)](https://pypi.org/project/bagel-factor/)
+[![Python](https://img.shields.io/pypi/pyversions/bagel-factor)](https://pypi.org/project/bagel-factor/)
+[![License](https://img.shields.io/github/license/bagelquant/bagel-factor)](https://github.com/bagelquant/bagel-factor/blob/main/LICENSE)
+
 A small, pandas-first toolkit for **single-factor evaluation/testing**.
 
 ## Scope (by design)
@@ -29,6 +34,31 @@ uv sync
 
 ## Quickstart
 
+### 0) Data preparation (CRITICAL)
+
+Before using bagel-factor, ensure your data meets these requirements:
+
+```python
+import pandas as pd
+from bagelfactor.data import ensure_panel_index, lag_by_asset
+
+# 1. Load your data
+df = pd.read_csv("your_data.csv")
+
+# 2. Create canonical panel index
+panel = ensure_panel_index(df, date="date", asset="ticker")
+
+# 3. CRITICAL: Sort the panel
+panel = panel.sort_index()
+
+# 4. Lag factors to avoid lookahead bias
+# (If factor data is "as-of" date t, use it starting from t+1)
+panel = lag_by_asset(panel, columns=["your_factor"], periods=1)
+```
+
+**⚠️ Important**: Unsorted data will produce incorrect results. Point-in-time integrity is your responsibility.  
+See [Data Format Requirements](./docs/data_format_requirements.md) for details.
+
 ### 1) Prepare a canonical panel
 
 Most APIs expect a canonical **panel**:
@@ -49,6 +79,7 @@ raw = pd.DataFrame(
 )
 
 panel = ensure_panel_index(raw)
+panel = panel.sort_index()  # Always sort after creating index
 ```
 
 ### 2) (Optional) preprocess the factor
@@ -105,6 +136,18 @@ print(ic_test)
 print(ls_alpha)
 ```
 
+### 6) (Optional) Validate your data
+
+Use the diagnostic utility to check for common issues:
+
+```python
+from bagelfactor.utils import diagnose_panel
+
+diag = diagnose_panel(panel)
+print(diag)
+# Shows: sorting status, duplicates, missing data, warnings
+```
+
 Full example with expected outputs: see [`docs/example.md`](./docs/example.md).
 
 ## Benchmarks
@@ -119,6 +162,7 @@ Reproduce: `uv run python examples/benchmark_ic.py` (benchmarks included in repo
 ### Table of contents
 
 - Getting started
+  - **[Data Format Requirements](./docs/data_format_requirements.md)** ⚠️ Read this first!
   - [Factor evaluation guide](./docs/factor_evaluation.md)
   - [End-to-end example](./docs/example.md)
 

@@ -12,7 +12,6 @@ from typing import Literal
 
 import pandas as pd
 
-
 IndexLike = Literal["index", "columns"]
 
 
@@ -75,7 +74,31 @@ def add_forward_returns(
     horizons: Iterable[int] = (1, 5, 20),
     prefix: str = "ret_fwd_",
 ) -> pd.DataFrame:
-    """Add forward return labels ``{prefix}{h}`` computed from ``price`` (per-asset)."""
+    """Add forward return labels ``{prefix}{h}`` computed from ``price`` (per-asset).
+
+    Forward returns are computed as: (price[t+h] / price[t]) - 1
+
+    IMPORTANT: Panel MUST be sorted by (date, asset) index for correct results.
+    Use `panel.sort_index()` or pass `sort=True` to `ensure_panel_index()`.
+
+    Unsorted data will produce incorrect forward returns.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Canonical panel indexed by (date, asset)
+    price : str
+        Column name containing price data
+    horizons : Iterable[int]
+        Forward return horizons in periods (must be positive integers)
+    prefix : str
+        Prefix for generated forward return columns
+
+    Returns
+    -------
+    pd.DataFrame
+        Panel with added forward return columns
+    """
 
     validate_panel(panel)
     out = panel.copy()

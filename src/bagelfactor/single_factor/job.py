@@ -31,7 +31,11 @@ class SingleFactorJob:
         n_quantiles: int = 5,
         ic_method: str = "spearman",
     ) -> SingleFactorResult:
-        panel = ensure_panel_index(panel, source="index") if isinstance(panel.index, pd.MultiIndex) else ensure_panel_index(panel)
+        panel = (
+            ensure_panel_index(panel, source="index")
+            if isinstance(panel.index, pd.MultiIndex)
+            else ensure_panel_index(panel)
+        )
         validate_panel(panel)
 
         if universe is not None:

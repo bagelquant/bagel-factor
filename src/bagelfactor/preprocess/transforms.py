@@ -37,7 +37,19 @@ class Clip:
 class ZScore:
     """Cross-sectional z-score per date for `column`.
 
-    Uses population std (ddof=0). If std == 0, returns NaN for that date.
+    Uses population std (ddof=0). If std == 0 or all values are identical
+    for a given date, returns NaN for that entire date.
+
+    Example
+    -------
+    >>> panel = pd.DataFrame({
+    ...     'date': ['2020-01-01', '2020-01-01', '2020-01-02'],
+    ...     'asset': ['A', 'B', 'A'],
+    ...     'factor': [1.0, 1.0, 2.0]  # 2020-01-01 has zero variance
+    ... })
+    >>> panel = ensure_panel_index(panel)
+    >>> result = ZScore('factor').transform(panel)
+    >>> # All values for 2020-01-01 will be NaN due to zero variance
     """
 
     column: str
@@ -73,7 +85,9 @@ class Rank:
     def transform(self, panel: pd.DataFrame) -> pd.DataFrame:
         validate_panel(panel)
         out = panel.copy()
-        out[self.column] = out[self.column].groupby(level="date", sort=False).rank(
-            pct=self.pct, method=self.method
+        out[self.column] = (
+            out[self.column]
+            .groupby(level="date", sort=False)
+            .rank(pct=self.pct, method=self.method)
         )
         return out

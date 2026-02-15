@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -44,5 +43,7 @@ def test_single_factor_job_with_universe_and_preprocess() -> None:
     mask = pd.Series([True, False, True, False, True, False], index=panel.index)
     u = Universe(mask=mask)
     pp = Pipeline([Rank("alpha")])
-    res = SingleFactorJob.run(panel, "alpha", horizons=(1,), universe=u, preprocess=pp, n_quantiles=2)
+    res = SingleFactorJob.run(
+        panel, "alpha", horizons=(1,), universe=u, preprocess=pp, n_quantiles=2
+    )
     assert res.quantile_returns[1].shape[1] <= 2

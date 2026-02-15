@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from bagelfactor.data.panel import validate_panel
 
@@ -47,16 +47,13 @@ def ic_series(
     w["x2"] = w["x"] * w["x"]
     w["y2"] = w["y"] * w["y"]
 
-    g = (
-        w.groupby(level="date", sort=False)
-        .agg(
-            n=("x", "size"),
-            sum_x=("x", "sum"),
-            sum_y=("y", "sum"),
-            sum_xy=("xy", "sum"),
-            sum_x2=("x2", "sum"),
-            sum_y2=("y2", "sum"),
-        )
+    g = w.groupby(level="date", sort=False).agg(
+        n=("x", "size"),
+        sum_x=("x", "sum"),
+        sum_y=("y", "sum"),
+        sum_xy=("xy", "sum"),
+        sum_x2=("x2", "sum"),
+        sum_y2=("y2", "sum"),
     )
 
     n = g["n"].astype(float)
@@ -76,12 +73,15 @@ def ic_series(
 
 
 def icir(ic: pd.Series) -> float:
-    """IC information ratio: mean(IC) / std(IC)."""
+    """IC information ratio: mean(IC) / std(IC).
+
+    Uses sample standard deviation (ddof=1) following standard statistical practice.
+    """
 
     ic = ic.dropna()
     if len(ic) == 0:
         return float("nan")
-    sd = ic.std(ddof=0)
+    sd = ic.std(ddof=1)
     if sd == 0 or pd.isna(sd):
         return float("nan")
     return float(ic.mean() / sd)

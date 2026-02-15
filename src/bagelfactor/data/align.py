@@ -14,7 +14,6 @@ import pandas as pd
 
 from .panel import validate_panel
 
-
 AlignMethod = Literal["raw", "ffill"]
 
 
@@ -24,7 +23,36 @@ def align_to_calendar(
     *,
     method: AlignMethod = "raw",
 ) -> pd.DataFrame:
-    """Align a canonical panel to a provided trading calendar."""
+    """Align a canonical panel to a provided trading calendar.
+
+    CAUTION: When using method='ffill', forward-filling propagates the last known
+    value forward in time. You must ensure factors are lagged appropriately to
+    avoid lookahead bias.
+
+    Example - Correct Usage (no lookahead):
+        # Lag fundamental data before aligning
+        panel = lag_by_asset(panel, columns=['fundamental_factor'], periods=1)
+        panel = align_to_calendar(panel, calendar, method='ffill')
+
+    Example - Incorrect Usage (lookahead bias):
+        # This will use same-day fundamental data - LOOKAHEAD BIAS!
+        panel = align_to_calendar(panel, calendar, method='ffill')
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Canonical panel indexed by (date, asset)
+    trade_calendar : pd.DatetimeIndex
+        Trading calendar to align to
+    method : {'raw', 'ffill'}
+        'raw': No filling (NaN for missing dates)
+        'ffill': Forward-fill last known value within each asset
+
+    Returns
+    -------
+    pd.DataFrame
+        Panel aligned to trading calendar
+    """
 
     validate_panel(panel)
 

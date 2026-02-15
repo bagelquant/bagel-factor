@@ -249,7 +249,11 @@ def plot_long_short_time_series(
 def _turnover_pivot(turnover: pd.Series) -> pd.DataFrame:
     if not isinstance(turnover.index, pd.MultiIndex):
         raise TypeError("turnover must be indexed by (date, quantile)")
-    return turnover.rename("turnover").reset_index().pivot(index="date", columns="quantile", values="turnover")
+    return (
+        turnover.rename("turnover")
+        .reset_index()
+        .pivot(index="date", columns="quantile", values="turnover")
+    )
 
 
 def plot_turnover_time_series(

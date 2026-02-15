@@ -55,6 +55,7 @@ def _base_panel() -> pd.DataFrame:
 # panel / align
 # -----------------
 
+
 def test_ensure_panel_index_from_columns() -> None:
     panel = ensure_panel_index(_base_panel())
     assert isinstance(panel.index, pd.MultiIndex)
@@ -100,9 +101,7 @@ def test_lag_by_asset_shifts_selected_columns_only() -> None:
 
 
 def test_align_to_calendar_raw_and_ffill() -> None:
-    df = pd.DataFrame(
-        {"date": ["2020-01-01", "2020-01-03"], "asset": ["A", "A"], "x": [1.0, 3.0]}
-    )
+    df = pd.DataFrame({"date": ["2020-01-01", "2020-01-03"], "asset": ["A", "A"], "x": [1.0, 3.0]})
     panel = ensure_panel_index(df)
     cal = pd.DatetimeIndex(pd.to_datetime(["2020-01-01", "2020-01-02", "2020-01-03"]))
 
@@ -117,10 +116,9 @@ def test_align_to_calendar_raw_and_ffill() -> None:
 # factors / universe
 # -----------------
 
+
 def test_factor_series_renames_index_axes() -> None:
-    idx = pd.MultiIndex.from_product(
-        [pd.to_datetime(["2020-01-01"]), ["A"]], names=["d", "a"]
-    )
+    idx = pd.MultiIndex.from_product([pd.to_datetime(["2020-01-01"]), ["A"]], names=["d", "a"])
     fs = FactorSeries(name="x", values=pd.Series([1.0], index=idx))
     assert fs.values.index.names == ["date", "asset"]
 
@@ -144,6 +142,7 @@ def test_universe_apply_filters_panel() -> None:
 # -----------------
 # loaders
 # -----------------
+
 
 def test_infer_format_known_suffixes() -> None:
     assert _infer_format("data.csv") == "csv"
@@ -263,7 +262,10 @@ def test_excel_loader_smoke_via_mock() -> None:
 # calendar
 # -----------------
 
-def test_calendar_daily_retrieves_and_caches(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+
+def test_calendar_daily_retrieves_and_caches(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("BAGELFACTOR_CALENDAR_DIR", str(tmp_path))
     path = retrieve_trading_calendar(
         market="US", start="2020-01-01", end="2020-01-31", overwrite=True

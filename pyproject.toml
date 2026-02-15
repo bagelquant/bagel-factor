@@ -29,6 +29,7 @@ Repository = "https://github.com/bagelquant/bagel-factor"
 dev = [
     "build>=1.4.0",
     "pytest>=9.0.2",
+    "ruff>=0.15.1",
     "twine>=6.2.0",
 ]
 
@@ -38,6 +39,35 @@ build-backend = "setuptools.build_meta"
 
 [tool.hatch.build]
 include = ["src/bagelfactor"]
+
+# Ruff configuration
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "N806",  # variable in function should be lowercase (allow X for matrices, Axes for matplotlib)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.isort]
+known-first-party = ["bagelfactor"]
 
 # uv settings (tools/uv may also be configured externally)
 [tool.uv]
