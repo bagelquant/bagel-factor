@@ -5,16 +5,38 @@
 [![Python](https://img.shields.io/pypi/pyversions/bagel-factor)](https://pypi.org/project/bagel-factor/)
 [![License](https://img.shields.io/github/license/bagelquant/bagel-factor)](https://github.com/bagelquant/bagel-factor/blob/main/LICENSE)
 
-A small, pandas-first toolkit for **single-factor evaluation/testing**.
+A **pandas-first toolkit** for single-factor evaluation in quantitative finance.
+
+## What is this?
+
+`bagel-factor` helps you answer: **"Does my factor predict future returns?"**
+
+Given a factor (signal) and price data, it computes:
+- ✅ **IC/ICIR** - Information coefficient (predictive correlation)
+- ✅ **Quantile returns** - Performance by factor bucket
+- ✅ **Long-short spread** - Top-minus-bottom returns
+- ✅ **Turnover** - Trading cost implications
+- ✅ **Coverage** - Data quality metrics
+- ✅ **Statistical tests** - Significance testing
+
+**Perfect for**: Alpha researchers, quant traders, and anyone evaluating predictive signals.
 
 ## Scope (by design)
 
-This package focuses on:
-- canonical point-in-time data helpers (`(date, asset)` panel)
-- preprocessing transforms (clip / z-score / rank)
-- single-factor evaluation (IC/ICIR, quantile returns, long-short, coverage, turnover)
+**What it does**:
+- 📊 Canonical point-in-time panel data structure (`date × asset`)
+- 🔄 Preprocessing transforms (clip/zscore/rank)
+- 📈 Single-factor evaluation metrics
+- 📉 Publication-quality visualizations
+- 🧪 Statistical testing
 
-It intentionally does **not** implement multi-factor modeling or portfolio backtesting.
+**What it doesn't do** (by design):
+- ❌ Multi-factor portfolio optimization
+- ❌ Backtesting with transaction costs
+- ❌ Risk model construction
+- ❌ Position sizing / execution
+
+This is a **precision calculation engine** for factor evaluation, not a full backtesting framework.
 
 ## Install
 
@@ -32,9 +54,49 @@ This repo is managed with [`uv`](https://github.com/astral-sh/uv).
 uv sync
 ```
 
-## Quickstart
+## Quick Example
 
-### 0) Data preparation (CRITICAL)
+```python
+from bagelfactor import SingleFactorJob, plot_result_summary
+
+# Run evaluation
+res = SingleFactorJob.run(
+    panel,                    # Your data: (date, asset) indexed DataFrame
+    factor="alpha",           # Factor column name
+    price="close",            # Price column for forward returns
+    horizons=(1, 5, 20),      # Evaluate 1, 5, and 20-period returns
+    n_quantiles=5,            # Split into 5 buckets
+)
+
+# Check results
+print(f"IC: {res.ic[5].mean():.3f}")
+print(f"ICIR: {res.icir[5]:.2f}")
+print(f"Sharpe: {res.long_short[5].mean() / res.long_short[5].std():.2f}")
+
+# Visualize
+fig = plot_result_summary(res, horizon=5)
+fig.show()
+```
+
+**Output**: A comprehensive 4×2 plot showing IC, quantile returns, long-short performance, turnover, and coverage.
+
+---
+
+## Installation
+
+Requires Python ≥3.12
+
+```bash
+pip install bagel-factor
+```
+
+---
+
+## User Guide
+
+### Step-by-Step Tutorial
+
+#### 0) Data preparation (CRITICAL)
 
 Before using bagel-factor, ensure your data meets these requirements:
 
@@ -56,10 +118,10 @@ panel = panel.sort_index()
 panel = lag_by_asset(panel, columns=["your_factor"], periods=1)
 ```
 
-**⚠️ Important**: Unsorted data will produce incorrect results. Point-in-time integrity is your responsibility.  
-See [Data Format Requirements](./docs/data_format_requirements.md) for details.
+**⚠️ Critical**: Unsorted data produces incorrect results. Point-in-time integrity is your responsibility.  
+📖 See [Data Format Requirements](./docs/data_format_requirements.md) for complete guide.
 
-### 1) Prepare a canonical panel
+#### 1) Prepare a canonical panel
 
 Most APIs expect a canonical **panel**:
 - `pd.DataFrame`
@@ -79,10 +141,10 @@ raw = pd.DataFrame(
 )
 
 panel = ensure_panel_index(raw)
-panel = panel.sort_index()  # Always sort after creating index
+panel = panel.sort_index()  # ← CRITICAL: Always sort!
 ```
 
-### 2) (Optional) preprocess the factor
+#### 2) (Optional) preprocess the factor
 
 ```python
 from bagelfactor.preprocess import Clip, Pipeline, Rank, ZScore
@@ -94,79 +156,222 @@ preprocess = Pipeline([
 ])
 ```
 
-### 3) Run single-factor evaluation
-
-`horizons` supports multiple forward-return windows (tuple of positive integers).
+#### 3) Run single-factor evaluation
 
 ```python
-from bagelfactor.single_factor import SingleFactorJob
+from bagelfactor import SingleFactorJob
 
 res = SingleFactorJob.run(
     panel,
-    factor="alpha",
-    price="close",
-    horizons=(1, 5, 20),
-    n_quantiles=5,
-    preprocess=preprocess,
+    factor="alpha",          # Factor column name
+    price="close",           # Price for computing returns
+    horizons=(1, 5, 20),     # Multiple forward-return windows
+    n_quantiles=5,           # Number of buckets (quintiles)
+    preprocess=preprocess,   # Optional
+)
+```
+
+**What you get**:
+
+```python
+# Information Coefficient (per horizon)
+res.ic[1]           # Daily IC time series
+res.icir[1]         # IC Information Ratio
+
+# Quantile analysis
+res.quantile_returns[5]   # Mean returns per quantile (5-day horizon)
+res.long_short[5]         # Top minus bottom returns
+
+# Diagnostics
+res.coverage        # Data availability
+res.turnover        # Trading cost proxy
+```
+
+#### 4) Interpret results
+
+**Quick health check**:
+
+```python
+h = 5  # 5-day horizon
+
+# 1. Check IC
+ic_mean = res.ic[h].mean()
+print(f"Mean IC: {ic_mean:.4f}")  # Want: 0.03-0.10 (positive or negative)
+
+# 2. Check stability
+icir = res.icir[h]
+print(f"ICIR: {icir:.2f}")  # Want: > 0.5
+
+# 3. Check economic significance
+ls_mean = res.long_short[h].mean()
+ls_std = res.long_short[h].std()
+sharpe = ls_mean / ls_std if ls_std > 0 else 0
+print(f"L/S Sharpe: {sharpe:.2f}")  # Want: > 0.5
+
+# 4. Check tradability
+turnover = res.turnover.mean()
+print(f"Avg turnover: {turnover:.1%}")  # Want: < 40%
+```
+
+📖 **Complete interpretation guide**: [Result Interpretation Guide](./docs/interpretation_guide.md)
+
+#### 5) Visualize results
+
+```python
+from bagelfactor import plot_result_summary
+
+# All-in-one summary (4×2 grid)
+fig = plot_result_summary(res, horizon=5)
+fig.savefig('factor_summary.png', dpi=150)
+```
+
+**Or use individual plots**:
+
+```python
+from bagelfactor import (
+    plot_ic_time_series,
+    plot_quantile_cumulative_returns,
+    plot_long_short_time_series,
 )
 
-ic_1d = res.ic[1]
-qret_5d = res.quantile_returns[5]
-long_short_20d = res.long_short[20]
+# IC over time
+plot_ic_time_series(res.ic[5], rolling=20)
+
+# Cumulative wealth by quantile
+plot_quantile_cumulative_returns(res.quantile_returns[5])
+
+# Long-short equity curve
+plot_long_short_time_series(res.long_short[5], cumulative=True)
 ```
 
-### 4) Visualize results
+#### 6) Statistical tests
 
 ```python
-from bagelfactor.visualization import plot_result_summary
+from bagelfactor import ttest_1samp, ols_alpha_tstat
 
-fig = plot_result_summary(res, horizon=5)
-fig.show()
-```
-
-### 5) Statistical tests
-
-```python
-from bagelfactor.stats import ols_alpha_tstat, ttest_1samp
-
+# Test if mean IC is significantly different from 0
 ic_test = ttest_1samp(res.ic[5], popmean=0.0)
-ls_alpha = ols_alpha_tstat(res.long_short[5])
+print(f"IC t-stat: {ic_test.statistic:.2f}, p-value: {ic_test.pvalue:.4f}")
 
-print(ic_test)
-print(ls_alpha)
+# Test if long-short has significant alpha
+ls_alpha = ols_alpha_tstat(res.long_short[5])
+print(f"L/S alpha t-stat: {ls_alpha.tstat:.2f}")
+
+# Interpretation:
+# |t-stat| > 2: Significant at ~5% level
+# |t-stat| > 3: Strong evidence
 ```
 
-### 6) (Optional) Validate your data
+#### 7) (Optional) Validate your data
 
 Use the diagnostic utility to check for common issues:
 
 ```python
-from bagelfactor.utils import diagnose_panel
+from bagelfactor import diagnose_panel
 
 diag = diagnose_panel(panel)
 print(diag)
-# Shows: sorting status, duplicates, missing data, warnings
 ```
 
-Full example with expected outputs: see [`docs/example.md`](./docs/example.md).
+**Example output**:
+```
+Panel Diagnostics
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Valid MultiIndex with names ['date', 'asset']
+✓ Index is sorted
+✓ No duplicate entries
+⚠ Missing data: 5.2% of values are NaN
+  Date range: 2020-01-01 to 2023-12-31 (1000 dates)
+  Assets: 500 unique
+```
 
-## Benchmarks
+---
 
-- IC (information coefficient): vectorized implementation yields ~4-5x speedup on synthetic panels (examples/benchmark_ic.py) with numeric agreement to baseline.
-- Coverage: vectorized implementation yields ~20-30x speedup; results are numerically identical to the baseline implementation.
+## Understanding Results
 
-Reproduce: `uv run python examples/benchmark_ic.py` (benchmarks included in repository).
+### What do these metrics mean?
+
+| Metric | What it measures | Good range | Red flag |
+|--------|------------------|------------|----------|
+| **IC** | Cross-sectional correlation with returns | 0.03-0.10 | < 0.01 |
+| **ICIR** | IC stability (mean/std) | > 0.5 | < 0.2 |
+| **Quantile spread** | Q5 - Q1 average return | Context-dependent | Non-monotonic |
+| **Turnover** | Portfolio changes between periods | < 30% (daily) | > 60% |
+| **Coverage** | Data availability | > 90% | < 80% |
+
+📖 **Detailed interpretation**: [Result Interpretation Guide](./docs/interpretation_guide.md)
+
+### Example: Good vs Concerning Factor
+
+**✅ Good Factor**:
+```
+IC: 0.045, ICIR: 1.2
+Quantiles: Q1=-0.8%, Q2=-0.1%, Q3=0.2%, Q4=0.6%, Q5=1.2%
+L/S Sharpe: 1.8
+Turnover: 25%
+Coverage: 95%
+```
+→ Strong, stable signal with monotonic quantiles and reasonable turnover.
+
+**⚠️ Concerning Factor**:
+```
+IC: 0.015, ICIR: 0.3
+Quantiles: Q1=0.2%, Q2=-0.5%, Q3=0.8%, Q4=-0.2%, Q5=0.3%
+L/S Sharpe: 0.4
+Turnover: 65%
+Coverage: 75%
+```
+→ Weak, unstable signal with non-monotonic quantiles, high turnover, and data quality issues.
+
+---
 
 ## Documentation
 
+### Getting Started
+
+- 🚀 **[Quick Start (above)](#quick-example)** - 5-minute intro
+- 📊 **[Result Interpretation Guide](./docs/interpretation_guide.md)** - How to understand your results
+- ⚠️ **[Data Format Requirements](./docs/data_format_requirements.md)** - Critical data prep guide
+- 📝 **[Complete Example](./docs/example.md)** - Full workflow with outputs
+- 📚 **[Factor Evaluation Theory](./docs/factor_evaluation.md)** - Statistical background
+
+### Complete Example
+
+```bash
+# Run the included example
+uv run python examples/example.py
+
+# View outputs in examples/outputs/
+```
+
+Full example with expected outputs: [`docs/example.md`](./docs/example.md).
+
+---
+
+## Performance
+
+Optimized vectorized implementations:
+
+| Metric | Speedup | Notes |
+|--------|---------|-------|
+| IC | 4-5x | Vectorized correlation |
+| Coverage | 20-30x | Single pass counting |
+| Quantiles | 10x+ | Optimized groupby |
+
+Reproduce: `uv run python examples/benchmark_ic.py`
+
+## API Reference
+
 ### Table of contents
 
-- Getting started
-  - **[Data Format Requirements](./docs/data_format_requirements.md)** ⚠️ Read this first!
-  - [Factor evaluation guide](./docs/factor_evaluation.md)
-  - [End-to-end example](./docs/example.md)
+- **Getting started**
+  - 🚀 [Quick Start](#quick-example) (in README above)
+  - 📊 **[Result Interpretation Guide](./docs/interpretation_guide.md)** ⭐ Start here for understanding results!
+  - ⚠️ **[Data Format Requirements](./docs/data_format_requirements.md)** - Critical for correct results
+  - 📝 [Complete Example](./docs/example.md) - Full workflow with outputs
+  - 📚 [Factor Evaluation Theory](./docs/factor_evaluation.md) - Statistical background
 
-- Modules
+- **Modules** (API reference)
   - [`bagelfactor.data`](./docs/modules/data.md)
     - [data/index](./docs/modules/data/index.md)
     - [data/panel](./docs/modules/data/panel.md)
@@ -201,8 +406,64 @@ Reproduce: `uv run python examples/benchmark_ic.py` (benchmarks included in repo
   - [`bagelfactor.reporting`](./docs/modules/reporting/index.md)
     - [reporting/export](./docs/modules/reporting/export.md)
 
-- Design docs
+- **Design docs**
   - [v0 proposals](./docs/proposals/proposals_v0.md)
+
+---
+
+## Install (dev / from source)
+
+This repo uses [`uv`](https://github.com/astral-sh/uv) for development:
+
+```bash
+git clone https://github.com/bagelquant/bagel-factor.git
+cd bagel-factor
+uv sync
+uv run pytest  # Run tests
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
+
+---
+
+## FAQ
+
+**Q: What's the difference between IC and RankIC?**  
+A: IC uses Pearson correlation (linear), RankIC uses Spearman (rank-based). RankIC is more robust to outliers.
+
+**Q: Why is my IC negative?**  
+A: Negative IC means higher factor values predict lower returns. Consider inverting your factor (multiply by -1).
+
+**Q: What IC value is "good"?**  
+A: Context-dependent, but for daily equity factors: 0.03-0.06 is solid, >0.10 is exceptional (or suspicious—check for data leakage).
+
+**Q: My quantile returns aren't monotonic. Is that bad?**  
+A: Yes, it suggests the factor doesn't cleanly order assets. Check data quality, try different preprocessing, or investigate non-linear relationships.
+
+**Q: How do I handle missing data?**  
+A: The package handles NaN gracefully (cross-sectional operations skip missing values). But check coverage—if it's low, your results may be biased.
+
+**Q: Can I use this for non-equity asset classes?**  
+A: Yes! The package is asset-class agnostic. Just provide a `(date, asset)` panel with factor and price data.
+
+📖 More details: [Interpretation Guide](./docs/interpretation_guide.md)
+
+---
+
+## Citation
+
+If you use `bagel-factor` in academic research, please cite:
+
+```bibtex
+@software{bagel_factor,
+  title = {bagel-factor: A pandas-first toolkit for single-factor evaluation},
+  author = {{Bagel Quant}},
+  year = {2024},
+  url = {https://github.com/bagelquant/bagel-factor}
+}
+```
+
+---
 
 ## License
 
